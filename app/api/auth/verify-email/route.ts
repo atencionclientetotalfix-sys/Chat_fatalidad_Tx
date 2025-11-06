@@ -22,7 +22,14 @@ export async function POST(request: NextRequest) {
       .eq('activo', true)
       .single()
 
-    if (error || !usuarioPermitido) {
+    if (error) {
+      return NextResponse.json(
+        { permitido: false, mensaje: 'Email no autorizado' },
+        { status: 403 }
+      )
+    }
+
+    if (!usuarioPermitido) {
       return NextResponse.json(
         { permitido: false, mensaje: 'Email no autorizado' },
         { status: 403 }
