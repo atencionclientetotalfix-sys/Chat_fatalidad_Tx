@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { Database } from '@/types/database'
 
 export const runtime = 'nodejs'
+
+type UsuarioPermitido = Database['public']['Tables']['usuarios_permitidos']['Row']
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,6 +41,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // TypeScript ahora sabe que usuarioPermitido no es null después de las validaciones
     return NextResponse.json({ 
       permitido: true,
       nombre: usuarioPermitido.nombre 
