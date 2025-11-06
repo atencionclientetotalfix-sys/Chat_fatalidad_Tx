@@ -8,6 +8,8 @@ import {
 } from '@/lib/openai/assistant'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()

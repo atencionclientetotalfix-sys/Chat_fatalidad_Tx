@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { subirArchivo } from '@/lib/openai/assistant'
 import { validarArchivo } from '@/lib/utils/file-handler'
 
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
