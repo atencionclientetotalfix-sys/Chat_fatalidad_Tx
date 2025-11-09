@@ -20,6 +20,12 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   swcMinify: true,
+  // Solución específica para error de manifest en grupos de rutas
+  transpilePackages: [],
+  // Asegurar generación correcta de manifiestos
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
 }
 
 module.exports = nextConfig
