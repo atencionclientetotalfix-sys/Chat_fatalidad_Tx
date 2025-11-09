@@ -7,8 +7,6 @@ import { Download, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Mensaje, ArchivoAdjunto } from '@/types'
 
-export const dynamic = 'force-dynamic'
-
 export default function ChatPage() {
   const params = useParams()
   const router = useRouter()

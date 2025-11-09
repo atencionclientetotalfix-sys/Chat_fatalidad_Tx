@@ -7,6 +7,11 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
   "functions": {
     "app/api/chat/route.ts": {
       "maxDuration": 120

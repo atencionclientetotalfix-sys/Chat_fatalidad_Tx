@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/sidebar/Sidebar'
+import { SidebarWrapper } from '@/components/sidebar/SidebarWrapper'
 import { Perfil, Conversacion } from '@/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -42,7 +42,7 @@ export default async function DashboardLayout({
 
     return (
       <div className="flex h-screen bg-base">
-        <Sidebar
+        <SidebarWrapper
           perfil={perfil as Perfil}
           conversaciones={(conversaciones as Conversacion[]) || []}
         />
