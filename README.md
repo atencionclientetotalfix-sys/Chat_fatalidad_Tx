@@ -161,6 +161,16 @@ El proyecto está configurado con:
 - `vercel.json` para configuración optimizada de Vercel
 - `next.config.js` con optimizaciones para producción
 - Configuración de funciones serverless con timeout extendido
+- Metadata en layouts para asegurar generación correcta de manifiestos en Next.js 14
+
+### Solución de Errores de Build
+
+Si encuentras el error `ENOENT: no such file or directory, lstat '/vercel/path0/.next/server/app/(dashboard)/page_client-reference-manifest.js'`:
+
+1. **Verificar metadata en layouts**: Asegúrate de que todos los layouts tengan metadata exportada
+2. **Limpiar caché de build**: En Vercel, usa "Clear Build Cache" antes de desplegar
+3. **Verificar estructura de archivos**: Asegúrate de que todos los archivos `page.tsx` tengan contenido válido
+4. **Reinstalar dependencias**: Si el problema persiste, elimina `node_modules` y `package-lock.json`, luego ejecuta `npm install`
 
 ## 👨‍💻 Desarrollo
 

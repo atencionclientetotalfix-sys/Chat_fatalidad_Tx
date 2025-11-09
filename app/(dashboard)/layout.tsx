@@ -3,8 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { SidebarWrapper } from '@/components/sidebar/SidebarWrapper'
 import { Perfil, Conversacion } from '@/types'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Dashboard - Asistente HS Etchegaray',
+  description: 'Panel de control del asistente conversacional',
+}
 
 export default async function DashboardLayout({
   children,

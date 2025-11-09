@@ -20,8 +20,6 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   swcMinify: true,
-  // Configuración para Vercel
-  // output: 'standalone', // Comentado para compatibilidad con Vercel
 }
 
 module.exports = nextConfig
