@@ -7,6 +7,8 @@ import { Download, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Mensaje, ArchivoAdjunto } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 export default function DashboardPage() {
   const router = useRouter()
   const [conversacionId, setConversacionId] = useState<string | null>(null)

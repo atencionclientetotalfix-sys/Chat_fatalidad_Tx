@@ -4,6 +4,8 @@ import { Sidebar } from '@/components/sidebar/Sidebar'
 import { Perfil, Conversacion } from '@/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {
