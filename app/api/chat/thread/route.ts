@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { crearThread } from '@/lib/openai/assistant'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { manejarError, logError } from '@/lib/utils/error-handler'
 
 export const runtime = 'nodejs'
+export const maxDuration = 30
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +15,33 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      const error = manejarError(new Error('No autorizado'))
+      return NextResponse.json({ error: error.mensaje }, { status: 401 })
     }
 
     const { titulo, tipoChat } = await request.json()
 
+    // Validación
+    const tituloFinal = titulo && typeof titulo === 'string' && titulo.trim() 
+      ? titulo.trim() 
+      : 'Nueva Conversación'
+    
+    const tipoChatFinal = tipoChat && typeof tipoChat === 'string'
+      ? tipoChat
+      : 'control_fatalidad_tx'
+
     // Crear thread en OpenAI
-    const threadId = await crearThread()
+    let threadId: string
+    try {
+      threadId = await crearThread()
+    } catch (error) {
+      const errorDetallado = manejarError(error)
+      logError(errorDetallado, 'Crear thread en OpenAI')
+      return NextResponse.json(
+        { error: 'Error al crear thread de conversación' },
+        { status: 500 }
+      )
+    }
 
     // Crear conversación en Supabase
     const adminSupabase = createAdminClient()
@@ -27,14 +49,16 @@ export async function POST(request: NextRequest) {
       .from('conversaciones')
       .insert({
         usuario_id: session.user.id,
-        titulo: titulo || 'Nueva Conversación',
-        tipo_chat: tipoChat || 'control_fatalidad_tx',
+        titulo: tituloFinal,
+        tipo_chat: tipoChatFinal,
         thread_id: threadId,
       })
       .select()
       .single()
 
     if (error) {
+      const errorDetallado = manejarError(error)
+      logError(errorDetallado, 'Crear conversación en Supabase')
       return NextResponse.json(
         { error: 'Error al crear conversación' },
         { status: 500 }
@@ -43,7 +67,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ conversacion })
   } catch (error) {
-    console.error('Error al crear thread:', error)
+    const errorDetallado = manejarError(error)
+    logError(errorDetallado, 'API chat thread POST')
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

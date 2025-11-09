@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Database } from '@/types/database'
 
 export const runtime = 'nodejs'
+export const maxDuration = 30
 
 type UsuarioPermitido = Database['public']['Tables']['usuarios_permitidos']['Row']
 

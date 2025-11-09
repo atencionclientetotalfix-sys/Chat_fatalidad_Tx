@@ -7,8 +7,11 @@ import {
   obtenerMensajes,
 } from '@/lib/openai/assistant'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { manejarError, logError, TipoError } from '@/lib/utils/error-handler'
+import { verificarRateLimit, obtenerIdentificador } from '@/lib/utils/rate-limiter'
 
 export const runtime = 'nodejs'
+export const maxDuration = 120
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,16 +21,42 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      const error = manejarError(new Error('No autorizado'))
+      return NextResponse.json({ error: error.mensaje }, { status: 401 })
+    }
+
+    // Rate limiting
+    const identificador = obtenerIdentificador(request, session.user.id)
+    const rateLimit = verificarRateLimit(identificador, '/api/chat')
+    
+    if (!rateLimit.permitido) {
+      return NextResponse.json(
+        {
+          error: 'Demasiadas solicitudes. Por favor espera un momento.',
+          tiempoRestante: Math.ceil((rateLimit.tiempoRestante || 0) / 1000),
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rateLimit.tiempoRestante || 0) / 1000).toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(Date.now() + (rateLimit.tiempoRestante || 0)).toISOString(),
+          },
+        }
+      )
     }
 
     const { conversacionId, mensaje, archivos } = await request.json()
 
-    if (!conversacionId || !mensaje) {
-      return NextResponse.json(
-        { error: 'Faltan parámetros requeridos' },
-        { status: 400 }
-      )
+    // Validación mejorada
+    if (!conversacionId || typeof conversacionId !== 'string') {
+      const error = manejarError(new Error('ID de conversación inválido'))
+      return NextResponse.json({ error: error.mensaje }, { status: 400 })
+    }
+
+    if (!mensaje || typeof mensaje !== 'string' || mensaje.trim().length === 0) {
+      const error = manejarError(new Error('El mensaje no puede estar vacío'))
+      return NextResponse.json({ error: error.mensaje }, { status: 400 })
     }
 
     const adminSupabase = createAdminClient()
@@ -41,20 +70,33 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (convError || !conversacion) {
-      return NextResponse.json(
-        { error: 'Conversación no encontrada' },
-        { status: 404 }
-      )
+      const error = manejarError(convError || new Error('Conversación no encontrada'))
+      logError(error, 'Obtener conversación')
+      return NextResponse.json({ error: error.mensaje }, { status: 404 })
     }
 
     // Crear thread si no existe
     let threadId = conversacion.thread_id
     if (!threadId) {
-      threadId = await crearThread()
-      await adminSupabase
-        .from('conversaciones')
-        .update({ thread_id: threadId })
-        .eq('id', conversacionId)
+      try {
+        threadId = await crearThread()
+        const { error: updateError } = await adminSupabase
+          .from('conversaciones')
+          .update({ thread_id: threadId })
+          .eq('id', conversacionId)
+
+        if (updateError) {
+          const error = manejarError(updateError)
+          logError(error, 'Actualizar thread_id')
+        }
+      } catch (error) {
+        const errorDetallado = manejarError(error)
+        logError(errorDetallado, 'Crear thread')
+        return NextResponse.json(
+          { error: 'Error al crear thread de conversación' },
+          { status: 500 }
+        )
+      }
     }
 
     // Guardar mensaje del usuario
@@ -63,34 +105,54 @@ export async function POST(request: NextRequest) {
       .insert({
         conversacion_id: conversacionId,
         rol: 'user',
-        contenido: mensaje,
+        contenido: mensaje.trim(),
         archivos_adjuntos: archivos || [],
       })
       .select()
       .single()
 
     if (msgError) {
+      const error = manejarError(msgError)
+      logError(error, 'Guardar mensaje usuario')
+      return NextResponse.json({ error: 'Error al guardar mensaje' }, { status: 500 })
+    }
+
+    // Enviar mensaje a OpenAI
+    const fileIds = archivos?.map((a: any) => a.id).filter(Boolean) || []
+    
+    let runId: string
+    try {
+      const resultado = await enviarMensaje(threadId, mensaje.trim(), fileIds)
+      runId = resultado.runId
+    } catch (error) {
+      const errorDetallado = manejarError(error)
+      logError(errorDetallado, 'Enviar mensaje a OpenAI')
       return NextResponse.json(
-        { error: 'Error al guardar mensaje' },
+        { error: errorDetallado.mensaje },
         { status: 500 }
       )
     }
 
-    // Enviar mensaje a OpenAI
-    const fileIds = archivos?.map((a: any) => a.id) || []
-    const { runId } = await enviarMensaje(threadId, mensaje, fileIds)
-
     // Esperar respuesta (polling)
     let estado = 'queued'
     let intentos = 0
-    const maxIntentos = 60
+    const maxIntentos = 120 // 2 minutos máximo
 
     while (estado !== 'completed' && intentos < maxIntentos) {
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      estado = await verificarEstadoRun(threadId, runId)
+      
+      try {
+        estado = await verificarEstadoRun(threadId, runId)
+      } catch (error) {
+        const errorDetallado = manejarError(error)
+        logError(errorDetallado, 'Verificar estado run')
+        // Continuar intentando en caso de error temporal
+      }
+      
       intentos++
 
       if (estado === 'failed' || estado === 'cancelled') {
+        const error = manejarError(new Error(`Run ${estado}`))
         return NextResponse.json(
           { error: 'Error al procesar la solicitud' },
           { status: 500 }
@@ -100,13 +162,24 @@ export async function POST(request: NextRequest) {
 
     if (estado !== 'completed') {
       return NextResponse.json(
-        { error: 'Timeout al esperar respuesta' },
-        { status: 500 }
+        { error: 'Timeout al esperar respuesta. Por favor intenta nuevamente.' },
+        { status: 504 }
       )
     }
 
     // Obtener mensajes de OpenAI
-    const mensajesOpenAI = await obtenerMensajes(threadId)
+    let mensajesOpenAI
+    try {
+      mensajesOpenAI = await obtenerMensajes(threadId)
+    } catch (error) {
+      const errorDetallado = manejarError(error)
+      logError(errorDetallado, 'Obtener mensajes de OpenAI')
+      return NextResponse.json(
+        { error: 'Error al obtener respuesta' },
+        { status: 500 }
+      )
+    }
+    
     const ultimoMensaje = mensajesOpenAI[mensajesOpenAI.length - 1]
 
     if (ultimoMensaje && ultimoMensaje.rol === 'assistant') {
@@ -124,7 +197,9 @@ export async function POST(request: NextRequest) {
           .single()
 
       if (asistenteError) {
-        console.error('Error al guardar respuesta:', asistenteError)
+        const error = manejarError(asistenteError)
+        logError(error, 'Guardar respuesta asistente')
+        // No fallar la request, solo loguear el error
       }
 
       // Actualizar fecha de actualización de conversación
@@ -136,12 +211,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         mensajeUsuario,
         mensajeAsistente,
+      }, {
+        headers: {
+          'X-RateLimit-Remaining': (rateLimit.limiteRestante || 0).toString(),
+          'X-RateLimit-Reset': new Date(Date.now() + (rateLimit.tiempoRestante || 0)).toISOString(),
+        },
       })
     }
 
-    return NextResponse.json({ error: 'No se recibió respuesta' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'No se recibió respuesta del asistente' },
+      { status: 500 }
+    )
   } catch (error) {
-    console.error('Error en API chat:', error)
+    const errorDetallado = manejarError(error)
+    logError(errorDetallado, 'API chat POST')
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

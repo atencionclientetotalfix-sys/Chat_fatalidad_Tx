@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { manejarError, logError } from '@/lib/utils/error-handler'
 
 export const runtime = 'nodejs'
+export const maxDuration = 30
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,17 +14,16 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      const error = manejarError(new Error('No autorizado'))
+      return NextResponse.json({ error: error.mensaje }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const conversacionId = searchParams.get('conversacionId')
 
-    if (!conversacionId) {
-      return NextResponse.json(
-        { error: 'Falta el ID de conversación' },
-        { status: 400 }
-      )
+    if (!conversacionId || typeof conversacionId !== 'string') {
+      const error = manejarError(new Error('ID de conversación requerido'))
+      return NextResponse.json({ error: error.mensaje }, { status: 400 })
     }
 
     const adminSupabase = createAdminClient()
@@ -36,10 +37,9 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (convError || !conversacion) {
-      return NextResponse.json(
-        { error: 'Conversación no encontrada' },
-        { status: 404 }
-      )
+      const error = manejarError(convError || new Error('Conversación no encontrada'))
+      logError(error, 'Obtener conversación en mensajes')
+      return NextResponse.json({ error: error.mensaje }, { status: 404 })
     }
 
     // Obtener mensajes
@@ -50,15 +50,15 @@ export async function GET(request: NextRequest) {
       .order('creado_en', { ascending: true })
 
     if (msgError) {
-      return NextResponse.json(
-        { error: 'Error al obtener mensajes' },
-        { status: 500 }
-      )
+      const error = manejarError(msgError)
+      logError(error, 'Obtener mensajes de conversación')
+      return NextResponse.json({ error: 'Error al obtener mensajes' }, { status: 500 })
     }
 
     return NextResponse.json({ mensajes: mensajes || [] })
   } catch (error) {
-    console.error('Error al obtener mensajes:', error)
+    const errorDetallado = manejarError(error)
+    logError(errorDetallado, 'API chat mensajes GET')
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
