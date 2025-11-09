@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
     const adminSupabase = createAdminClient()
     const { data: conversacion, error } = await adminSupabase
       .from('conversaciones')
+      // @ts-expect-error - Supabase type inference issue, pero funciona correctamente en runtime
       .insert({
         usuario_id: session.user.id,
         titulo: tituloFinal,

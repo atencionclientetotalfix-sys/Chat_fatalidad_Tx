@@ -28,14 +28,7 @@ export async function POST(request: NextRequest) {
       .eq('activo', true)
       .single()
 
-    if (error) {
-      return NextResponse.json(
-        { permitido: false, mensaje: 'Email no autorizado' },
-        { status: 403 }
-      )
-    }
-
-    if (!usuarioPermitido) {
+    if (error || !usuarioPermitido) {
       return NextResponse.json(
         { permitido: false, mensaje: 'Email no autorizado' },
         { status: 403 }
@@ -43,9 +36,10 @@ export async function POST(request: NextRequest) {
     }
 
     // TypeScript ahora sabe que usuarioPermitido no es null después de las validaciones
+    const usuario: UsuarioPermitido = usuarioPermitido
     return NextResponse.json({ 
       permitido: true,
-      nombre: usuarioPermitido.nombre 
+      nombre: usuario.nombre 
     })
   } catch (error) {
     console.error('Error al verificar email:', error)

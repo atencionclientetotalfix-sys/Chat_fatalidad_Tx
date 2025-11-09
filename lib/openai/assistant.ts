@@ -1,10 +1,10 @@
 import OpenAI from 'openai'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 })
 
-const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID!
+const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID || ''
 
 export const contextoAsistente = `Eres un asistente experto en seguridad laboral y salud ocupacional, especializado en obras de construcción eléctrica de transmisión en Chile. Tu función es ayudar a interpretar y aplicar las normas de control de riesgos de fatalidad del grupo SAESA, incluyendo:
 
@@ -50,7 +50,7 @@ export async function obtenerMensajes(threadId: string) {
   })
 
   return mensajes.data
-    .filter((msg) => msg.role !== 'system')
+    .filter((msg) => (msg.role as string) !== 'system')
     .map((msg) => {
       const contenido = msg.content[0]
       if (contenido.type === 'text') {

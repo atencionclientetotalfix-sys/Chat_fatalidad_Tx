@@ -80,12 +80,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Generar PDF
-    let buffer: Buffer
+    let arrayBuffer: ArrayBuffer
     try {
       const doc = exportarConversacionAPDF(conversacion, mensajes || [])
       const pdfBlob = doc.output('blob')
-      const arrayBuffer = await pdfBlob.arrayBuffer()
-      buffer = Buffer.from(arrayBuffer)
+      arrayBuffer = await pdfBlob.arrayBuffer()
     } catch (error) {
       const errorDetallado = manejarError(error)
       logError(errorDetallado, 'Generar PDF')
@@ -95,7 +94,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return new NextResponse(buffer, {
+    return new NextResponse(arrayBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="conversacion-${conversacionId}.pdf"`,
