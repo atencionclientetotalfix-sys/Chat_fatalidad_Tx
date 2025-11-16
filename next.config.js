@@ -23,8 +23,6 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   swcMinify: true,
-  // Configuración para Vercel
-  output: 'standalone',
   // Asegurar que las rutas dinámicas funcionen correctamente
   transpilePackages: [],
 }
