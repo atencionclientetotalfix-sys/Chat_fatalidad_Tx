@@ -5,6 +5,7 @@ import { manejarError, logError } from '@/lib/utils/error-handler'
 import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 
 export async function GET(request: NextRequest) {

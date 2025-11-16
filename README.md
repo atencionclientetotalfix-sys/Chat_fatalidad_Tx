@@ -171,7 +171,23 @@ El proyecto está configurado con:
 
 ### Solución de Errores de Build
 
-Si encuentras el error `ENOENT: no such file or directory, lstat '/vercel/path0/.next/server/app/(dashboard)/page_client-reference-manifest.js'`:
+#### Error: Dynamic server usage / ENOENT client-reference-manifest
+
+Si encuentras errores como:
+- `Dynamic server usage: Page couldn't be rendered statically because it used 'cookies'`
+- `ENOENT: no such file or directory, lstat '/vercel/path0/.next/server/app/(dashboard)/page_client-reference-manifest.js'`
+
+**Causa**: Las rutas API usan `cookies()` (a través de `createClient()`) pero Next.js intenta pre-renderizarlas estáticamente durante el build.
+
+**Solución aplicada**: Todas las rutas API ahora incluyen `export const dynamic = 'force-dynamic'` para forzar el renderizado dinámico:
+
+```typescript
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'  // ← Fuerza renderizado dinámico
+export const maxDuration = 30
+```
+
+#### Otros problemas de build
 
 1. **Verificar metadata en layouts**: Asegúrate de que todos los layouts tengan metadata exportada
 2. **Limpiar caché de build**: En Vercel, usa "Clear Build Cache" antes de desplegar
@@ -189,7 +205,15 @@ Este proyecto es privado y exclusivo para el Sr. Fernando Etchegaray S.
 
 ## 🔄 Actualizaciones Recientes
 
-### Mejoras de Seguridad (Última actualización)
+### Corrección de Build en Vercel (16 Nov 2025)
+
+- ✅ **Fix de renderizado dinámico**: Agregada configuración `dynamic = 'force-dynamic'` a todas las rutas API
+  - Soluciona error: `Dynamic server usage: Page couldn't be rendered statically because it used 'cookies'`
+  - Soluciona error: `ENOENT: no such file or directory... page_client-reference-manifest.js`
+  - Todas las rutas API ahora se renderizan correctamente en modo dinámico
+- ✅ **Documentación actualizada**: README actualizado con información sobre la solución y su causa
+
+### Mejoras de Seguridad
 
 - ✅ **Sistema de verificación multicapa**: Implementada verificación de usuarios permitidos en múltiples capas:
   - Middleware: Verifica acceso antes de permitir entrada a rutas protegidas

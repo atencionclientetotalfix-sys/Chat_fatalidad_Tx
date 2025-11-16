@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verificarUsuarioPermitido } from '@/lib/utils/auth-helper'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 
 export async function POST(request: NextRequest) {

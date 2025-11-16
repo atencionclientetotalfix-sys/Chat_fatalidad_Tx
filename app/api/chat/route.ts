@@ -16,6 +16,7 @@ type Conversacion = Database['public']['Tables']['conversaciones']['Row']
 type ConversacionUpdate = Database['public']['Tables']['conversaciones']['Update']
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
 export async function POST(request: NextRequest) {

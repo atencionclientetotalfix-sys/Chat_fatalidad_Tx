@@ -7,6 +7,7 @@ import { verificarRateLimit, obtenerIdentificador } from '@/lib/utils/rate-limit
 import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 export async function POST(request: NextRequest) {
