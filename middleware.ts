@@ -12,7 +12,6 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // @ts-expect-error - API de cookies de @supabase/ssr, funciona correctamente en runtime
         getAll() {
           return request.cookies.getAll()
         },
