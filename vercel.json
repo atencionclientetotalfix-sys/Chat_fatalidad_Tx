@@ -9,7 +9,8 @@
   },
   "build": {
     "env": {
-      "NEXT_TELEMETRY_DISABLED": "1"
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NODE_VERSION": "20"
     }
   },
   "functions": {
