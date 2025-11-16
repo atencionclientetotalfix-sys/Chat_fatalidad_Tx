@@ -9,8 +9,13 @@ export async function middleware(request: NextRequest) {
   if (
     pathname === '/recuperar-contraseña' ||
     pathname === '/restablecer-contraseña' ||
-    pathname.startsWith('/restablecer-contraseña')
+    pathname.startsWith('/restablecer-contraseña/')
   ) {
+    return NextResponse.next()
+  }
+
+  // Excluir rutas de API del middleware (se manejan por separado)
+  if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
