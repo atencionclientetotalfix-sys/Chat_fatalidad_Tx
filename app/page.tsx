@@ -16,7 +16,8 @@ function HomeContent() {
       
       // Si hay un código de recuperación, redirigir a la página de restablecer contraseña
       if (codigo) {
-        router.replace(`/restablecer-contraseña?code=${codigo}`)
+        // Usar window.location para asegurar que la redirección funcione
+        window.location.href = `/restablecer-contraseña?code=${encodeURIComponent(codigo)}`
         return
       }
 

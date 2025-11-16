@@ -23,7 +23,14 @@ function RestablecerContraseñaForm() {
   useEffect(() => {
     // Intercambiar el código por una sesión
     const intercambiarCodigo = async () => {
-      const codigo = searchParams.get('code')
+      // Intentar obtener el código de los searchParams primero
+      let codigo = searchParams.get('code')
+      
+      // Si no está en searchParams, intentar obtenerlo de la URL directamente
+      if (!codigo && typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        codigo = urlParams.get('code')
+      }
       
       if (!codigo) {
         setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
@@ -39,7 +46,8 @@ function RestablecerContraseñaForm() {
         const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
 
         if (exchangeError) {
-          setError('El enlace ha expirado o es inválido. Por favor solicita uno nuevo.')
+          console.error('Error al intercambiar código:', exchangeError)
+          setError(`El enlace ha expirado o es inválido: ${exchangeError.message}. Por favor solicita uno nuevo.`)
           setVerificandoToken(false)
           setTokenValido(false)
           return
@@ -49,16 +57,18 @@ function RestablecerContraseñaForm() {
           setTokenValido(true)
           setVerificandoToken(false)
           // Limpiar el código de la URL sin perder el estado
-          window.history.replaceState({}, '', '/restablecer-contraseña')
+          if (typeof window !== 'undefined') {
+            window.history.replaceState({}, '', '/restablecer-contraseña')
+          }
         } else {
           setError('No se pudo establecer la sesión. Por favor intenta nuevamente.')
           setTokenValido(false)
           setVerificandoToken(false)
         }
       } catch (err) {
+        console.error('Error al verificar enlace:', err)
         setError('Ocurrió un error al verificar el enlace. Por favor intenta nuevamente.')
         setTokenValido(false)
-      } finally {
         setVerificandoToken(false)
       }
     }
