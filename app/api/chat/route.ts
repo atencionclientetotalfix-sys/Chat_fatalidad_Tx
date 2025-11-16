@@ -9,6 +9,7 @@ import {
 import { createAdminClient } from '@/lib/supabase/admin'
 import { manejarError, logError, TipoError } from '@/lib/utils/error-handler'
 import { verificarRateLimit, obtenerIdentificador } from '@/lib/utils/rate-limiter'
+import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 import { Database } from '@/types/database'
 
 type Conversacion = Database['public']['Tables']['conversaciones']['Row']
@@ -27,6 +28,19 @@ export async function POST(request: NextRequest) {
     if (!session) {
       const error = manejarError(new Error('No autorizado'))
       return NextResponse.json({ error: error.mensaje }, { status: 401 })
+    }
+
+    // Verificar que el usuario esté en la tabla de usuarios permitidos
+    const emailUsuario = session.user.email
+    if (!emailUsuario) {
+      const error = manejarError(new Error('Email no disponible'))
+      return NextResponse.json({ error: error.mensaje }, { status: 401 })
+    }
+
+    const tieneAcceso = await verificarAccesoUsuario(emailUsuario)
+    if (!tieneAcceso) {
+      const error = manejarError(new Error('Usuario no autorizado'))
+      return NextResponse.json({ error: error.mensaje }, { status: 403 })
     }
 
     // Rate limiting

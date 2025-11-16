@@ -99,11 +99,17 @@ asistentehsetchegaray/
 
 ## 🔐 Seguridad
 
-- Autenticación exclusiva por email
-- API keys almacenadas en variables de entorno del servidor
-- Row Level Security (RLS) en Supabase
-- Validación de archivos antes de subir
-- Rate limiting recomendado en producción
+- **Autenticación exclusiva por email**: Sistema de usuarios permitidos mediante tabla `usuarios_permitidos` en Supabase
+- **Verificación multicapa**: 
+  - Verificación en el login (antes de autenticarse)
+  - Verificación en el middleware (protección de rutas)
+  - Verificación en el layout del dashboard (capa adicional)
+  - Verificación en todas las rutas de API
+- **API keys almacenadas en variables de entorno del servidor**
+- **Row Level Security (RLS) en Supabase**: Políticas de seguridad a nivel de base de datos
+- **Validación de archivos antes de subir**: Verificación de tipo y tamaño
+- **Rate limiting**: Implementado en todas las rutas de API críticas
+- **Cierre automático de sesión**: Si un usuario es desactivado, su sesión se cierra automáticamente
 
 ## 📝 Funcionalidades del Chat
 
@@ -180,6 +186,39 @@ Desarrollado por **AutomatizaFix**
 ## 📄 Licencia
 
 Este proyecto es privado y exclusivo para el Sr. Fernando Etchegaray S.
+
+## 🔄 Actualizaciones Recientes
+
+### Mejoras de Seguridad (Última actualización)
+
+- ✅ **Sistema de verificación multicapa**: Implementada verificación de usuarios permitidos en múltiples capas:
+  - Middleware: Verifica acceso antes de permitir entrada a rutas protegidas
+  - Layout del dashboard: Verificación adicional al cargar el dashboard
+  - Rutas de API: Todas las rutas verifican que el usuario esté permitido
+- ✅ **Función helper reutilizable**: Creada `lib/utils/auth-helper.ts` para centralizar la lógica de verificación
+- ✅ **Cierre automático de sesión**: Si un usuario es desactivado en `usuarios_permitidos`, su sesión se cierra automáticamente
+- ✅ **Mejoras en manejo de errores**: Mejor gestión de errores en todas las rutas de API
+
+### Documentación y Herramientas de Verificación
+
+- ✅ **Guías de verificación**: Creadas guías completas para verificar el sistema
+  - `GUIA_VERIFICACION.md` - Guía paso a paso de verificación
+  - `CHECKLIST_VERIFICACION.md` - Checklist de verificación
+  - `TESTING.md` - Guía de testing con escenarios de prueba
+  - `RESUMEN_VERIFICACION.md` - Resumen ejecutivo de verificaciones
+- ✅ **Scripts de verificación**: Scripts automatizados para verificar configuración
+  - `backend/scripts/verificar_configuracion.py` - Script Python de verificación
+  - `supabase/verificar_migraciones.sql` - Script SQL de verificación
+
+### Funcionalidades Actuales
+
+- Sistema de autenticación con Supabase Auth
+- Gestión de usuarios permitidos mediante tabla en Supabase
+- Chat conversacional con OpenAI Assistant API
+- Historial persistente de conversaciones
+- Exportación a PDF
+- Carga de archivos (PDF, DOCX, imágenes, Excel)
+- Rate limiting en todas las rutas críticas
 
 ## 🔄 Actualizaciones Futuras
 

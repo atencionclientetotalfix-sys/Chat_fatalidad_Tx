@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { manejarError, logError } from '@/lib/utils/error-handler'
+import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -19,6 +20,19 @@ export async function DELETE(
     if (!session) {
       const error = manejarError(new Error('No autorizado'))
       return NextResponse.json({ error: error.mensaje }, { status: 401 })
+    }
+
+    // Verificar que el usuario esté en la tabla de usuarios permitidos
+    const emailUsuario = session.user.email
+    if (!emailUsuario) {
+      const error = manejarError(new Error('Email no disponible'))
+      return NextResponse.json({ error: error.mensaje }, { status: 401 })
+    }
+
+    const tieneAcceso = await verificarAccesoUsuario(emailUsuario)
+    if (!tieneAcceso) {
+      const error = manejarError(new Error('Usuario no autorizado'))
+      return NextResponse.json({ error: error.mensaje }, { status: 403 })
     }
 
     const conversacionId = params.id

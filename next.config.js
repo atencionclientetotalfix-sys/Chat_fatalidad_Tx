@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**.vercel.app',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
       },
     ],
     unoptimized: false,
@@ -20,12 +23,10 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   swcMinify: true,
-  // Solución específica para error de manifest en grupos de rutas
+  // Configuración para Vercel
+  output: 'standalone',
+  // Asegurar que las rutas dinámicas funcionen correctamente
   transpilePackages: [],
-  // Asegurar generación correcta de manifiestos
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
-  },
 }
 
 module.exports = nextConfig

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,10 +11,21 @@ import { createClient } from '@/lib/supabase/client'
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
+
+  // Verificar si hay mensajes de error en la URL
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'no_autorizado') {
+      setError('Tu acceso ha sido revocado. Por favor contacta al administrador.')
+    } else if (errorParam === 'email_no_disponible') {
+      setError('No se pudo verificar tu email. Por favor intenta nuevamente.')
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

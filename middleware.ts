@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -40,11 +41,32 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
+
+    // Verificar que el usuario esté en la tabla de usuarios permitidos
+    const emailUsuario = session.user.email
+    if (emailUsuario) {
+      const tieneAcceso = await verificarAccesoUsuario(emailUsuario)
+      if (!tieneAcceso) {
+        // Usuario no permitido, cerrar sesión y redirigir
+        await supabase.auth.signOut()
+        return NextResponse.redirect(new URL('/login?error=no_autorizado', request.url))
+      }
+    }
   }
 
   // Redirigir a dashboard si ya está autenticado y trata de acceder al login
   if (request.nextUrl.pathname === '/login' && session) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    // Verificar también en login para evitar redirecciones innecesarias
+    const emailUsuario = session.user.email
+    if (emailUsuario) {
+      const tieneAcceso = await verificarAccesoUsuario(emailUsuario)
+      if (tieneAcceso) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      } else {
+        // Usuario no permitido, cerrar sesión
+        await supabase.auth.signOut()
+      }
+    }
   }
 
   return supabaseResponse

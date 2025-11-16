@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SidebarWrapper } from '@/components/sidebar/SidebarWrapper'
 import { Perfil, Conversacion } from '@/types'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -24,6 +25,19 @@ export default async function DashboardLayout({
 
   if (!session) {
     redirect('/login')
+  }
+
+  // Verificar que el usuario esté en la tabla de usuarios permitidos
+  const emailUsuario = session.user.email
+  if (!emailUsuario) {
+    redirect('/login?error=email_no_disponible')
+  }
+
+  const tieneAcceso = await verificarAccesoUsuario(emailUsuario)
+  if (!tieneAcceso) {
+    // Usuario no permitido, cerrar sesión y redirigir
+    await supabase.auth.signOut()
+    redirect('/login?error=no_autorizado')
   }
 
   try {

@@ -98,22 +98,38 @@ Vercel desplegará automáticamente:
 
 ### Error: "Environment variables not found"
 - Verifica que todas las variables estén configuradas en Vercel
-- Asegúrate de que estén marcadas para el ambiente correcto
+- Asegúrate de que estén marcadas para el ambiente correcto (Production, Preview, Development)
+- Verifica que no haya espacios extra en los valores
 
 ### Error: "Build failed"
 - Revisa los logs de build en Vercel
 - Verifica que `package.json` tenga todas las dependencias
 - Asegúrate de que no haya errores de TypeScript
+- Limpia el caché de build en Vercel (Settings → General → Clear Build Cache)
+- Verifica que todos los layouts tengan `metadata` exportada
+
+### Error: "Function timeout"
+- Verifica que `vercel.json` tenga `maxDuration` configurado para las funciones
+- Las funciones de chat tienen 120 segundos configurados
+- Si necesitas más tiempo, considera actualizar el plan de Vercel
+
+### Error: "ENOENT: no such file or directory"
+- Verifica que todos los layouts tengan `metadata` exportada
+- Limpia el caché de build en Vercel
+- Verifica la estructura de archivos
+- Reinstala dependencias localmente: `rm -rf node_modules package-lock.json && npm install`
 
 ### Error: "Supabase connection failed"
 - Verifica que las URLs y keys de Supabase sean correctas
 - Asegúrate de que el proyecto Supabase esté activo
 - Verifica que las políticas RLS estén configuradas
+- Verifica que las migraciones se hayan ejecutado
 
 ### Error: "OpenAI API error"
 - Verifica que la API Key sea válida
 - Asegúrate de que el Assistant ID sea correcto
 - Verifica que tengas créditos en OpenAI
+- Revisa los logs de Vercel para más detalles del error
 
 ---
 
