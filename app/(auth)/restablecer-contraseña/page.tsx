@@ -39,11 +39,28 @@ function RestablecerContraseñaForm() {
         return
       }
 
+      // Timeout de seguridad (30 segundos)
+      let timeoutCompletado = false
+      const timeoutId = setTimeout(() => {
+        timeoutCompletado = true
+        setError('La verificación está tomando demasiado tiempo. Por favor intenta nuevamente.')
+        setVerificandoToken(false)
+        setTokenValido(false)
+      }, 30000)
+
       try {
         const supabase = createClient()
         
+        console.log('Intentando intercambiar código por sesión...')
+        
         // Intercambiar el código por una sesión
         const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
+
+        clearTimeout(timeoutId)
+        
+        if (timeoutCompletado) {
+          return // Ya se manejó el error del timeout
+        }
 
         if (exchangeError) {
           console.error('Error al intercambiar código:', exchangeError)
@@ -53,7 +70,8 @@ function RestablecerContraseñaForm() {
           return
         }
 
-        if (data.session) {
+        if (data?.session) {
+          console.log('Sesión establecida correctamente')
           setTokenValido(true)
           setVerificandoToken(false)
           // Limpiar el código de la URL sin perder el estado
@@ -61,19 +79,30 @@ function RestablecerContraseñaForm() {
             window.history.replaceState({}, '', '/restablecer-contraseña')
           }
         } else {
+          console.error('No se recibió sesión en la respuesta')
           setError('No se pudo establecer la sesión. Por favor intenta nuevamente.')
           setTokenValido(false)
           setVerificandoToken(false)
         }
       } catch (err) {
+        if (!timeoutCompletado) {
+          clearTimeout(timeoutId)
+        }
         console.error('Error al verificar enlace:', err)
-        setError('Ocurrió un error al verificar el enlace. Por favor intenta nuevamente.')
-        setTokenValido(false)
-        setVerificandoToken(false)
+        if (!timeoutCompletado) {
+          setError('Ocurrió un error al verificar el enlace. Por favor intenta nuevamente.')
+          setTokenValido(false)
+          setVerificandoToken(false)
+        }
       }
     }
     
     intercambiarCodigo()
+    
+    // Cleanup function
+    return () => {
+      // Esto se ejecutará si el componente se desmonta
+    }
   }, [searchParams, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
