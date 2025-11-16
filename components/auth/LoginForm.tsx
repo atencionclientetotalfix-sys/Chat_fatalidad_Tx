@@ -78,7 +78,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md mx-auto">
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          Asistente HS Etchegaray
+          ASISTENTES HSE PROFESIONAL
         </h1>
         <p className="text-foreground-secondary text-sm">
           Inicia sesión para continuar
@@ -132,6 +132,15 @@ export function LoginForm() {
             </>
           )}
         </Button>
+
+        <div className="text-center mt-4">
+          <a
+            href="/recuperar-contraseña"
+            className="text-sm text-primary hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
       </form>
 
       <div className="mt-6 pt-6 border-t border-border text-center">

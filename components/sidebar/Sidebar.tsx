@@ -3,6 +3,7 @@
 import { MessageSquare, Settings } from 'lucide-react'
 import { UserProfile } from './UserProfile'
 import { ChatList } from './ChatList'
+import { CambiarContraseña } from '@/components/auth/CambiarContraseña'
 import { Conversacion, Perfil } from '@/types'
 import { useState } from 'react'
 
@@ -48,7 +49,7 @@ export function Sidebar({
             <MessageSquare size={18} className="text-white" />
           </div>
           <h2 className="text-lg font-semibold text-foreground">
-            Asistente HS
+            ASISTENTES HSE
           </h2>
         </div>
         <div className="space-y-1">
@@ -67,6 +68,21 @@ export function Sidebar({
             <MessageSquare size={16} className="inline mr-2" />
             Control de Fatalidad TX
           </button>
+          <button
+            onClick={() => setMostrarConfiguracion(true)}
+            className={`
+              w-full text-left px-3 py-2 rounded-lg text-sm
+              transition-colors
+              ${
+                mostrarConfiguracion
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-foreground-secondary hover:bg-background-tertiary'
+              }
+            `}
+          >
+            <Settings size={16} className="inline mr-2" />
+            Configuración
+          </button>
         </div>
       </div>
 
@@ -80,12 +96,10 @@ export function Sidebar({
         />
       )}
 
-      {/* Configuración placeholder */}
+      {/* Configuración */}
       {mostrarConfiguracion && (
-        <div className="flex-1 p-4">
-          <p className="text-foreground-secondary text-sm">
-            Configuración próximamente
-          </p>
+        <div className="flex-1 p-4 overflow-y-auto">
+          <CambiarContraseña />
         </div>
       )}
 

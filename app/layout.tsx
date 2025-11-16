@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Asistente HS Etchegaray',
+  title: 'ASISTENTES HSE PROFESIONAL',
   description: 'Asistente conversacional para seguridad laboral y salud ocupacional',
 }
 

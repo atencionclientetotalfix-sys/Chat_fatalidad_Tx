@@ -1,6 +1,6 @@
-# Asistente HS Etchegaray
+# ASISTENTES HSE PROFESIONAL
 
-Aplicación web exclusiva para el Sr. Fernando Etchegaray S., diseñada para proporcionar acceso a chats conversacionales con la API de OpenAI, específicamente enfocada en el chat "Control de Fatalidad TX" para asistencia en seguridad laboral y salud ocupacional.
+Aplicación web diseñada para proporcionar acceso a chats conversacionales con la API de OpenAI, específicamente enfocada en el chat "Control de Fatalidad TX" para asistencia en seguridad laboral y salud ocupacional.
 
 ## 🚀 Características
 

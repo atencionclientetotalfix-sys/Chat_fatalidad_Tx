@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Dashboard - Asistente HS Etchegaray',
+  title: 'Dashboard - ASISTENTES HSE PROFESIONAL',
   description: 'Panel de control del asistente conversacional',
 }
 
