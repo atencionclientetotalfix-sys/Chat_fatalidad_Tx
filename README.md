@@ -187,6 +187,19 @@ export const dynamic = 'force-dynamic'  // ← Fuerza renderizado dinámico
 export const maxDuration = 30
 ```
 
+#### Vulnerabilidades de seguridad en dependencias
+
+Si ves warnings sobre vulnerabilidades al ejecutar `npm install`:
+
+```bash
+npm audit  # Ver detalles de vulnerabilidades
+```
+
+**Recomendación**: Mantén siempre las dependencias actualizadas a sus versiones más recientes y seguras:
+- Next.js: Usar versión 14.2.33 o superior
+- @supabase/ssr: Usar versión 0.7.0 o superior  
+- jspdf: Usar versión 3.0.3 o superior
+
 #### Otros problemas de build
 
 1. **Verificar metadata en layouts**: Asegúrate de que todos los layouts tengan metadata exportada
@@ -205,13 +218,20 @@ Este proyecto es privado y exclusivo para el Sr. Fernando Etchegaray S.
 
 ## 🔄 Actualizaciones Recientes
 
-### Corrección de Build en Vercel (16 Nov 2025)
+### Corrección de Build y Seguridad (16 Nov 2025)
 
 - ✅ **Fix de renderizado dinámico**: Agregada configuración `dynamic = 'force-dynamic'` a todas las rutas API
   - Soluciona error: `Dynamic server usage: Page couldn't be rendered statically because it used 'cookies'`
   - Soluciona error: `ENOENT: no such file or directory... page_client-reference-manifest.js`
   - Todas las rutas API ahora se renderizan correctamente en modo dinámico
-- ✅ **Documentación actualizada**: README actualizado con información sobre la solución y su causa
+- ✅ **Actualización de dependencias de seguridad**:
+  - Next.js actualizado de 14.0.4 a 14.2.33 (corrige 6 vulnerabilidades críticas)
+  - @supabase/ssr actualizado de 0.1.0 a 0.7.0 (corrige problemas de tipos y compatibilidad)
+  - jspdf actualizado de 2.5.1 a 3.0.3 (corrige vulnerabilidad XSS)
+  - Node.js fijado en versión 20.18.1 (estable LTS)
+  - **0 vulnerabilidades de seguridad** en dependencias
+- ✅ **Limpieza de código**: Eliminados comentarios `@ts-expect-error` innecesarios con nuevas versiones
+- ✅ **Documentación actualizada**: README actualizado con información sobre todas las soluciones
 
 ### Mejoras de Seguridad
 
