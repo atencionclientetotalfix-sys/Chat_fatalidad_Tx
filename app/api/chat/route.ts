@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         threadId = await crearThread()
         const { error: updateError } = await adminSupabase
           .from('conversaciones')
-          // @ts-expect-error - Supabase type inference issue, pero funciona correctamente en runtime
+          // @ts-expect-error - Supabase type inference issue
           .update({ thread_id: threadId })
           .eq('id', conversacionTipada.id)
 
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     // Guardar mensaje del usuario
     const { data: mensajeUsuario, error: msgError } = await adminSupabase
       .from('mensajes')
-      // @ts-expect-error - Supabase type inference issue, pero funciona correctamente en runtime
+      // @ts-expect-error - Supabase type inference issue
       .insert({
         conversacion_id: conversacionId,
         rol: 'user',
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
       const { data: mensajeAsistente, error: asistenteError } =
         await adminSupabase
           .from('mensajes')
-          // @ts-expect-error - Supabase type inference issue, pero funciona correctamente en runtime
+          // @ts-expect-error - Supabase type inference issue
           .insert({
             conversacion_id: conversacionId,
             rol: 'assistant',
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
       // Actualizar fecha de actualización de conversación
       await adminSupabase
         .from('conversaciones')
-        // @ts-expect-error - Supabase type inference issue, pero funciona correctamente en runtime
+        // @ts-expect-error - Supabase type inference issue
         .update({ actualizado_en: new Date().toISOString() })
         .eq('id', conversacionId)
 
