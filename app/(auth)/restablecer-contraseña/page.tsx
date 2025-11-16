@@ -47,11 +47,13 @@ function RestablecerContraseñaForm() {
 
         if (data.session) {
           setTokenValido(true)
-          // Limpiar el código de la URL
-          router.replace('/restablecer-contraseña')
+          setVerificandoToken(false)
+          // Limpiar el código de la URL sin perder el estado
+          window.history.replaceState({}, '', '/restablecer-contraseña')
         } else {
           setError('No se pudo establecer la sesión. Por favor intenta nuevamente.')
           setTokenValido(false)
+          setVerificandoToken(false)
         }
       } catch (err) {
         setError('Ocurrió un error al verificar el enlace. Por favor intenta nuevamente.')
