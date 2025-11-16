@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,29 +9,60 @@ import { Card } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
 import { createClient } from '@/lib/supabase/client'
 
-export default function RestablecerContraseñaPage() {
+function RestablecerContraseñaForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [nuevaContraseña, setNuevaContraseña] = useState('')
   const [confirmarContraseña, setConfirmarContraseña] = useState('')
   const [cargando, setCargando] = useState(false)
   const [exitoso, setExitoso] = useState(false)
   const [error, setError] = useState('')
   const [verificandoToken, setVerificandoToken] = useState(true)
+  const [tokenValido, setTokenValido] = useState(false)
 
   useEffect(() => {
-    // Verificar que tengamos un token válido
-    const verificarToken = async () => {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
+    // Intercambiar el código por una sesión
+    const intercambiarCodigo = async () => {
+      const codigo = searchParams.get('code')
       
-      if (!session) {
-        setError('Enlace inválido o expirado. Por favor solicita uno nuevo.')
+      if (!codigo) {
+        setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
+        setVerificandoToken(false)
+        setTokenValido(false)
+        return
       }
-      setVerificandoToken(false)
+
+      try {
+        const supabase = createClient()
+        
+        // Intercambiar el código por una sesión
+        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
+
+        if (exchangeError) {
+          setError('El enlace ha expirado o es inválido. Por favor solicita uno nuevo.')
+          setVerificandoToken(false)
+          setTokenValido(false)
+          return
+        }
+
+        if (data.session) {
+          setTokenValido(true)
+          // Limpiar el código de la URL
+          router.replace('/restablecer-contraseña')
+        } else {
+          setError('No se pudo establecer la sesión. Por favor intenta nuevamente.')
+          setTokenValido(false)
+        }
+      } catch (err) {
+        setError('Ocurrió un error al verificar el enlace. Por favor intenta nuevamente.')
+        setTokenValido(false)
+      } finally {
+        setVerificandoToken(false)
+      }
     }
     
-    verificarToken()
-  }, [])
+    intercambiarCodigo()
+  }, [searchParams, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,7 +109,40 @@ export default function RestablecerContraseñaPage() {
   if (verificandoToken) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-base">
-        <Loading tamaño="lg" />
+        <Card className="w-full max-w-md mx-auto">
+          <div className="text-center">
+            <Loading tamaño="lg" />
+            <p className="mt-4 text-foreground-secondary">
+              Verificando enlace de recuperación...
+            </p>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!tokenValido) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-base">
+        <Card className="w-full max-w-md mx-auto">
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Enlace Inválido
+            </h1>
+            {error && (
+              <p className="text-foreground-secondary mb-6">{error}</p>
+            )}
+            <Button
+              variante="primary"
+              tamaño="lg"
+              className="w-full"
+              onClick={() => router.push('/recuperar-contraseña')}
+            >
+              Solicitar nuevo enlace
+            </Button>
+          </div>
+        </Card>
       </div>
     )
   }
@@ -166,3 +230,23 @@ export default function RestablecerContraseñaPage() {
   )
 }
 
+export default function RestablecerContraseñaPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-4 bg-base">
+          <Card className="w-full max-w-md mx-auto">
+            <div className="text-center">
+              <Loading tamaño="lg" />
+              <p className="mt-4 text-foreground-secondary">
+                Cargando...
+              </p>
+            </div>
+          </Card>
+        </div>
+      }
+    >
+      <RestablecerContraseñaForm />
+    </Suspense>
+  )
+}
