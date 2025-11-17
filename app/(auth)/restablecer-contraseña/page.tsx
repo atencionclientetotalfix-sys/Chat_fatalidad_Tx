@@ -21,77 +21,67 @@ function RestablecerContraseñaForm() {
   const [tokenValido, setTokenValido] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient()
-    let timeoutId: NodeJS.Timeout | null = null
-    let authListener: { data: { subscription: any } } | null = null
-    
-    // Verificar si hay código en la URL
-    const tieneCodigo = () => {
-      if (typeof window === 'undefined') return false
-      return !!(window.location.hash || window.location.search || searchParams.get('code'))
-    }
-    
-    // Si no hay código, no es un enlace de recuperación válido
-    if (!tieneCodigo()) {
-      console.log('No se encontró código en la URL')
-      setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
-      setVerificandoToken(false)
-      setTokenValido(false)
-      return
-    }
-    
-    console.log('Código detectado en URL, esperando a que Supabase procese...')
-    
-    // Timeout de seguridad (30 segundos)
-    timeoutId = setTimeout(() => {
-      setError('La verificación está tomando demasiado tiempo. Por favor intenta nuevamente.')
-      setVerificandoToken(false)
-      setTokenValido(false)
-      if (authListener) {
-        authListener.data.subscription.unsubscribe()
-      }
-    }, 30000)
-    
-    // Escuchar cambios en el estado de autenticación
-    // Supabase procesará automáticamente el código cuando detecte el hash/query params
-    authListener = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session ? 'Sesión activa' : 'Sin sesión')
+    const procesarCodigoRecuperacion = async () => {
+      const supabase = createClient()
+      let timeoutId: NodeJS.Timeout | null = null
       
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        if (session) {
-          console.log('✅ Sesión establecida correctamente')
-          if (timeoutId) clearTimeout(timeoutId)
-          setTokenValido(true)
-          setVerificandoToken(false)
-          // Limpiar el código de la URL sin perder el estado
-          if (typeof window !== 'undefined') {
-            window.history.replaceState({}, '', '/restablecer-contraseña')
+      // Función para extraer tokens del hash
+      const extraerTokensDelHash = () => {
+        if (typeof window === 'undefined' || !window.location.hash) return null
+        
+        try {
+          const hash = window.location.hash.substring(1)
+          const params = new URLSearchParams(hash)
+          
+          const accessToken = params.get('access_token')
+          const refreshToken = params.get('refresh_token')
+          const type = params.get('type')
+          
+          console.log('Tokens extraídos del hash:', { 
+            tieneAccessToken: !!accessToken, 
+            tieneRefreshToken: !!refreshToken,
+            type 
+          })
+          
+          if (accessToken && type === 'recovery') {
+            return { accessToken, refreshToken }
           }
-          if (authListener) {
-            authListener.data.subscription.unsubscribe()
-          }
+        } catch (err) {
+          console.error('Error al extraer tokens del hash:', err)
         }
-      } else if (event === 'TOKEN_REFRESHED' && session) {
-        console.log('✅ Token refrescado, sesión activa')
-        if (timeoutId) clearTimeout(timeoutId)
-        setTokenValido(true)
-        setVerificandoToken(false)
-        if (typeof window !== 'undefined') {
-          window.history.replaceState({}, '', '/restablecer-contraseña')
-        }
-        if (authListener) {
-          authListener.data.subscription.unsubscribe()
-        }
+        
+        return null
       }
-    })
-    
-    // También verificar la sesión inmediatamente (por si ya está establecida)
-    const verificarSesionInicial = async () => {
+      
+      // Verificar si hay código en la URL
+      const tieneCodigo = () => {
+        if (typeof window === 'undefined') return false
+        return !!(window.location.hash || window.location.search || searchParams.get('code'))
+      }
+      
+      // Si no hay código, no es un enlace de recuperación válido
+      if (!tieneCodigo()) {
+        console.log('No se encontró código en la URL')
+        setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
+        setVerificandoToken(false)
+        setTokenValido(false)
+        return
+      }
+      
+      console.log('Código detectado en URL, procesando...')
+      
+      // Timeout de seguridad (30 segundos)
+      timeoutId = setTimeout(() => {
+        setError('La verificación está tomando demasiado tiempo. Por favor intenta nuevamente.')
+        setVerificandoToken(false)
+        setTokenValido(false)
+      }, 30000)
+      
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) {
-          console.error('Error al verificar sesión inicial:', error)
-        } else if (session) {
+        // Primero verificar si ya hay una sesión establecida
+        const { data: { session: sessionInicial }, error: errorInicial } = await supabase.auth.getSession()
+        
+        if (sessionInicial) {
           console.log('✅ Sesión ya estaba establecida')
           if (timeoutId) clearTimeout(timeoutId)
           setTokenValido(true)
@@ -99,25 +89,87 @@ function RestablecerContraseñaForm() {
           if (typeof window !== 'undefined') {
             window.history.replaceState({}, '', '/restablecer-contraseña')
           }
-          if (authListener) {
-            authListener.data.subscription.unsubscribe()
-          }
-        } else {
-          console.log('No hay sesión inicial, esperando evento de auth...')
+          return
         }
-      } catch (err) {
-        console.error('Error al verificar sesión inicial:', err)
+        
+        // Intentar extraer tokens del hash
+        const tokens = extraerTokensDelHash()
+        
+        if (tokens && tokens.accessToken) {
+          console.log('Estableciendo sesión con access_token del hash...')
+          
+          // Establecer la sesión usando setSession
+          const { data, error: setSessionError } = await supabase.auth.setSession({
+            access_token: tokens.accessToken,
+            refresh_token: tokens.refreshToken || '',
+          })
+          
+          if (setSessionError) {
+            console.error('Error al establecer sesión:', setSessionError)
+            throw setSessionError
+          }
+          
+          if (data.session) {
+            console.log('✅ Sesión establecida correctamente desde el hash')
+            if (timeoutId) clearTimeout(timeoutId)
+            setTokenValido(true)
+            setVerificandoToken(false)
+            if (typeof window !== 'undefined') {
+              window.history.replaceState({}, '', '/restablecer-contraseña')
+            }
+            return
+          }
+        }
+        
+        // Si no hay tokens en el hash, intentar con query params (código)
+        const codigo = searchParams.get('code') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('code') : null)
+        
+        if (codigo) {
+          console.log('Intentando procesar código de query params...')
+          // Para códigos en query params, Supabase debería procesarlos automáticamente
+          // Esperar un momento y verificar la sesión
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          const { data: { session: sessionDespues }, error: errorDespues } = await supabase.auth.getSession()
+          
+          if (sessionDespues) {
+            console.log('✅ Sesión establecida después de procesar código')
+            if (timeoutId) clearTimeout(timeoutId)
+            setTokenValido(true)
+            setVerificandoToken(false)
+            if (typeof window !== 'undefined') {
+              window.history.replaceState({}, '', '/restablecer-contraseña')
+            }
+            return
+          }
+        }
+        
+        // Si llegamos aquí, no se pudo establecer la sesión
+        console.error('❌ No se pudo establecer la sesión')
+        console.error('Hash:', window.location.hash?.substring(0, 200))
+        console.error('Search:', window.location.search)
+        if (timeoutId) clearTimeout(timeoutId)
+        setError('El enlace ha expirado o es inválido. Por favor solicita un nuevo enlace de recuperación.')
+        setVerificandoToken(false)
+        setTokenValido(false)
+        
+      } catch (err: any) {
+        console.error('Error al procesar código de recuperación:', err)
+        if (timeoutId) clearTimeout(timeoutId)
+        setError(`Error al verificar el enlace: ${err.message || 'Error desconocido'}. Por favor solicita uno nuevo.`)
+        setVerificandoToken(false)
+        setTokenValido(false)
       }
     }
     
-    verificarSesionInicial()
+    // Pequeño delay para asegurar que el hash esté disponible
+    const timer = setTimeout(() => {
+      procesarCodigoRecuperacion()
+    }, 300)
     
     // Cleanup function
     return () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      if (authListener) {
-        authListener.data.subscription.unsubscribe()
-      }
+      clearTimeout(timer)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Solo ejecutar una vez al montar el componente
