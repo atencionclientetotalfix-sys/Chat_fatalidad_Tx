@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,23 +19,94 @@ function RestablecerContraseñaForm() {
   const [error, setError] = useState('')
   const [verificandoToken, setVerificandoToken] = useState(true)
   const [tokenValido, setTokenValido] = useState(false)
+  const procesandoRef = useRef(false)
 
   useEffect(() => {
     // Intercambiar el código por una sesión
     const intercambiarCodigo = async () => {
-      // Intentar obtener el código de los searchParams primero
-      let codigo = searchParams.get('code')
+      if (procesandoRef.current) return
+      procesandoRef.current = true
       
-      // Si no está en searchParams, intentar obtenerlo de la URL directamente
-      if (!codigo && typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search)
-        codigo = urlParams.get('code')
+      // Delay más largo para asegurar que el hash esté disponible (especialmente en Vercel)
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      let codigo: string | null = null
+      
+      // Función helper para extraer código de diferentes formatos
+      const extraerCodigo = (): string | null => {
+        if (typeof window === 'undefined') return null
+        
+        // 1. Intentar desde el hash (formato más común: #access_token=xxx&type=recovery&code=xxx)
+        if (window.location.hash) {
+          try {
+            const hash = window.location.hash.substring(1)
+            // Intentar parsear como URLSearchParams
+            const hashParams = new URLSearchParams(hash)
+            codigo = hashParams.get('code') || hashParams.get('access_token')
+            
+            // Si no funciona, intentar buscar directamente en el hash
+            if (!codigo) {
+              const codeMatch = hash.match(/code=([^&]+)/)
+              if (codeMatch) codigo = codeMatch[1]
+            }
+            
+            if (codigo) {
+              console.log('✅ Código encontrado en hash')
+              return codigo
+            }
+          } catch (err) {
+            console.error('Error al parsear hash:', err)
+          }
+        }
+        
+        // 2. Intentar desde searchParams (Next.js)
+        try {
+          const codigoSearch = searchParams.get('code')
+          if (codigoSearch) {
+            console.log('✅ Código encontrado en searchParams')
+            return codigoSearch
+          }
+        } catch (err) {
+          console.error('Error al leer searchParams:', err)
+        }
+        
+        // 3. Intentar directamente desde window.location.search
+        if (window.location.search) {
+          try {
+            const urlParams = new URLSearchParams(window.location.search)
+            const codigoUrl = urlParams.get('code')
+            if (codigoUrl) {
+              console.log('✅ Código encontrado en URL search')
+              return codigoUrl
+            }
+          } catch (err) {
+            console.error('Error al parsear URL search:', err)
+          }
+        }
+        
+        return null
+      }
+      
+      // Intentar múltiples veces (por si el hash se carga después)
+      for (let intento = 0; intento < 3; intento++) {
+        codigo = extraerCodigo()
+        if (codigo) break
+        
+        if (intento < 2) {
+          console.log(`Intento ${intento + 1} fallido, esperando...`)
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }
       }
       
       if (!codigo) {
+        console.error('❌ No se encontró código en la URL después de 3 intentos')
+        console.error('Hash completo:', window.location.hash?.substring(0, 200))
+        console.error('Search completo:', window.location.search)
+        console.error('URL completa:', window.location.href)
         setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
         setVerificandoToken(false)
         setTokenValido(false)
+        procesandoRef.current = false
         return
       }
 
@@ -46,12 +117,13 @@ function RestablecerContraseñaForm() {
         setError('La verificación está tomando demasiado tiempo. Por favor intenta nuevamente.')
         setVerificandoToken(false)
         setTokenValido(false)
+        procesandoRef.current = false
       }, 30000)
 
       try {
         const supabase = createClient()
         
-        console.log('Intentando intercambiar código por sesión...')
+        console.log('Intentando intercambiar código por sesión...', { codigoLength: codigo.length })
         
         // Intercambiar el código por una sesión
         const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
@@ -59,6 +131,7 @@ function RestablecerContraseñaForm() {
         clearTimeout(timeoutId)
         
         if (timeoutCompletado) {
+          procesandoRef.current = false
           return // Ya se manejó el error del timeout
         }
 
@@ -67,6 +140,7 @@ function RestablecerContraseñaForm() {
           setError(`El enlace ha expirado o es inválido: ${exchangeError.message}. Por favor solicita uno nuevo.`)
           setVerificandoToken(false)
           setTokenValido(false)
+          procesandoRef.current = false
           return
         }
 
@@ -84,6 +158,7 @@ function RestablecerContraseñaForm() {
           setTokenValido(false)
           setVerificandoToken(false)
         }
+        procesandoRef.current = false
       } catch (err) {
         if (!timeoutCompletado) {
           clearTimeout(timeoutId)
@@ -94,16 +169,32 @@ function RestablecerContraseñaForm() {
           setTokenValido(false)
           setVerificandoToken(false)
         }
+        procesandoRef.current = false
       }
     }
     
+    // Ejecutar inmediatamente
     intercambiarCodigo()
+    
+    // También escuchar cambios en el hash (por si se carga después)
+    const handleHashChange = () => {
+      if (!procesandoRef.current && window.location.hash) {
+        intercambiarCodigo()
+      }
+    }
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', handleHashChange)
+    }
     
     // Cleanup function
     return () => {
-      // Esto se ejecutará si el componente se desmonta
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('hashchange', handleHashChange)
+      }
     }
-  }, [searchParams, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Solo ejecutar una vez al montar el componente
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

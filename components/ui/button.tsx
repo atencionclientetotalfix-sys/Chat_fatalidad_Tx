@@ -38,7 +38,7 @@ export function Button({
         font-medium
         transition-colors
         duration-200
-        flex items-center gap-2
+        flex items-center justify-center gap-2
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}

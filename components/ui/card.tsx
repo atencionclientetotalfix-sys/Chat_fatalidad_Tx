@@ -13,6 +13,13 @@ export function Card({ children, className = '' }: CardProps) {
         border border-border
         rounded-lg
         p-6
+        shadow-lg
+        shadow-primary/20
+        border-primary/30
+        transition-all
+        duration-300
+        hover:shadow-primary/30
+        hover:border-primary/50
         ${className}
       `}
     >
