@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,178 +19,104 @@ function RestablecerContraseñaForm() {
   const [error, setError] = useState('')
   const [verificandoToken, setVerificandoToken] = useState(true)
   const [tokenValido, setTokenValido] = useState(false)
-  const procesandoRef = useRef(false)
 
   useEffect(() => {
-    // Intercambiar el código por una sesión
-    const intercambiarCodigo = async () => {
-      if (procesandoRef.current) return
-      procesandoRef.current = true
-      
-      // Delay más largo para asegurar que el hash esté disponible (especialmente en Vercel)
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      let codigo: string | null = null
-      
-      // Función helper para extraer código de diferentes formatos
-      const extraerCodigo = (): string | null => {
-        if (typeof window === 'undefined') return null
-        
-        // 1. Intentar desde el hash (formato más común: #access_token=xxx&type=recovery&code=xxx)
-        if (window.location.hash) {
-          try {
-            const hash = window.location.hash.substring(1)
-            // Intentar parsear como URLSearchParams
-            const hashParams = new URLSearchParams(hash)
-            codigo = hashParams.get('code') || hashParams.get('access_token')
-            
-            // Si no funciona, intentar buscar directamente en el hash
-            if (!codigo) {
-              const codeMatch = hash.match(/code=([^&]+)/)
-              if (codeMatch) codigo = codeMatch[1]
-            }
-            
-            if (codigo) {
-              console.log('✅ Código encontrado en hash')
-              return codigo
-            }
-          } catch (err) {
-            console.error('Error al parsear hash:', err)
-          }
-        }
-        
-        // 2. Intentar desde searchParams (Next.js)
-        try {
-          const codigoSearch = searchParams.get('code')
-          if (codigoSearch) {
-            console.log('✅ Código encontrado en searchParams')
-            return codigoSearch
-          }
-        } catch (err) {
-          console.error('Error al leer searchParams:', err)
-        }
-        
-        // 3. Intentar directamente desde window.location.search
-        if (window.location.search) {
-          try {
-            const urlParams = new URLSearchParams(window.location.search)
-            const codigoUrl = urlParams.get('code')
-            if (codigoUrl) {
-              console.log('✅ Código encontrado en URL search')
-              return codigoUrl
-            }
-          } catch (err) {
-            console.error('Error al parsear URL search:', err)
-          }
-        }
-        
-        return null
+    const supabase = createClient()
+    let timeoutId: NodeJS.Timeout | null = null
+    let authListener: { data: { subscription: any } } | null = null
+    
+    // Verificar si hay código en la URL
+    const tieneCodigo = () => {
+      if (typeof window === 'undefined') return false
+      return !!(window.location.hash || window.location.search || searchParams.get('code'))
+    }
+    
+    // Si no hay código, no es un enlace de recuperación válido
+    if (!tieneCodigo()) {
+      console.log('No se encontró código en la URL')
+      setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
+      setVerificandoToken(false)
+      setTokenValido(false)
+      return
+    }
+    
+    console.log('Código detectado en URL, esperando a que Supabase procese...')
+    
+    // Timeout de seguridad (30 segundos)
+    timeoutId = setTimeout(() => {
+      setError('La verificación está tomando demasiado tiempo. Por favor intenta nuevamente.')
+      setVerificandoToken(false)
+      setTokenValido(false)
+      if (authListener) {
+        authListener.data.subscription.unsubscribe()
       }
+    }, 30000)
+    
+    // Escuchar cambios en el estado de autenticación
+    // Supabase procesará automáticamente el código cuando detecte el hash/query params
+    authListener = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session ? 'Sesión activa' : 'Sin sesión')
       
-      // Intentar múltiples veces (por si el hash se carga después)
-      for (let intento = 0; intento < 3; intento++) {
-        codigo = extraerCodigo()
-        if (codigo) break
-        
-        if (intento < 2) {
-          console.log(`Intento ${intento + 1} fallido, esperando...`)
-          await new Promise(resolve => setTimeout(resolve, 200))
-        }
-      }
-      
-      if (!codigo) {
-        console.error('❌ No se encontró código en la URL después de 3 intentos')
-        console.error('Hash completo:', window.location.hash?.substring(0, 200))
-        console.error('Search completo:', window.location.search)
-        console.error('URL completa:', window.location.href)
-        setError('Enlace inválido. Por favor solicita un nuevo enlace de recuperación.')
-        setVerificandoToken(false)
-        setTokenValido(false)
-        procesandoRef.current = false
-        return
-      }
-
-      // Timeout de seguridad (30 segundos)
-      let timeoutCompletado = false
-      const timeoutId = setTimeout(() => {
-        timeoutCompletado = true
-        setError('La verificación está tomando demasiado tiempo. Por favor intenta nuevamente.')
-        setVerificandoToken(false)
-        setTokenValido(false)
-        procesandoRef.current = false
-      }, 30000)
-
-      try {
-        const supabase = createClient()
-        
-        console.log('Intentando intercambiar código por sesión...', { codigoLength: codigo.length })
-        
-        // Intercambiar el código por una sesión
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
-
-        clearTimeout(timeoutId)
-        
-        if (timeoutCompletado) {
-          procesandoRef.current = false
-          return // Ya se manejó el error del timeout
-        }
-
-        if (exchangeError) {
-          console.error('Error al intercambiar código:', exchangeError)
-          setError(`El enlace ha expirado o es inválido: ${exchangeError.message}. Por favor solicita uno nuevo.`)
-          setVerificandoToken(false)
-          setTokenValido(false)
-          procesandoRef.current = false
-          return
-        }
-
-        if (data?.session) {
-          console.log('Sesión establecida correctamente')
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        if (session) {
+          console.log('✅ Sesión establecida correctamente')
+          if (timeoutId) clearTimeout(timeoutId)
           setTokenValido(true)
           setVerificandoToken(false)
           // Limpiar el código de la URL sin perder el estado
           if (typeof window !== 'undefined') {
             window.history.replaceState({}, '', '/restablecer-contraseña')
           }
+          if (authListener) {
+            authListener.data.subscription.unsubscribe()
+          }
+        }
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('✅ Token refrescado, sesión activa')
+        if (timeoutId) clearTimeout(timeoutId)
+        setTokenValido(true)
+        setVerificandoToken(false)
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/restablecer-contraseña')
+        }
+        if (authListener) {
+          authListener.data.subscription.unsubscribe()
+        }
+      }
+    })
+    
+    // También verificar la sesión inmediatamente (por si ya está establecida)
+    const verificarSesionInicial = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Error al verificar sesión inicial:', error)
+        } else if (session) {
+          console.log('✅ Sesión ya estaba establecida')
+          if (timeoutId) clearTimeout(timeoutId)
+          setTokenValido(true)
+          setVerificandoToken(false)
+          if (typeof window !== 'undefined') {
+            window.history.replaceState({}, '', '/restablecer-contraseña')
+          }
+          if (authListener) {
+            authListener.data.subscription.unsubscribe()
+          }
         } else {
-          console.error('No se recibió sesión en la respuesta')
-          setError('No se pudo establecer la sesión. Por favor intenta nuevamente.')
-          setTokenValido(false)
-          setVerificandoToken(false)
+          console.log('No hay sesión inicial, esperando evento de auth...')
         }
-        procesandoRef.current = false
       } catch (err) {
-        if (!timeoutCompletado) {
-          clearTimeout(timeoutId)
-        }
-        console.error('Error al verificar enlace:', err)
-        if (!timeoutCompletado) {
-          setError('Ocurrió un error al verificar el enlace. Por favor intenta nuevamente.')
-          setTokenValido(false)
-          setVerificandoToken(false)
-        }
-        procesandoRef.current = false
+        console.error('Error al verificar sesión inicial:', err)
       }
     }
     
-    // Ejecutar inmediatamente
-    intercambiarCodigo()
-    
-    // También escuchar cambios en el hash (por si se carga después)
-    const handleHashChange = () => {
-      if (!procesandoRef.current && window.location.hash) {
-        intercambiarCodigo()
-      }
-    }
-    
-    if (typeof window !== 'undefined') {
-      window.addEventListener('hashchange', handleHashChange)
-    }
+    verificarSesionInicial()
     
     // Cleanup function
     return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('hashchange', handleHashChange)
+      if (timeoutId) clearTimeout(timeoutId)
+      if (authListener) {
+        authListener.data.subscription.unsubscribe()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
