@@ -9,13 +9,11 @@ export function ThemeToggle() {
 
   useEffect(() => {
     setMontado(true)
-    // Verificar el tema guardado o la preferencia del sistema
-    const temaGuardado = localStorage.getItem('tema') as 'light' | 'dark' | null
-    const preferenciaSistema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    const temaInicial = temaGuardado || preferenciaSistema
+    // Leer el tema actual del DOM (ya establecido por el script de inicialización)
+    const tieneDark = document.documentElement.classList.contains('dark')
+    const temaActual = tieneDark ? 'dark' : 'light'
     
-    setTema(temaInicial)
-    aplicarTema(temaInicial)
+    setTema(temaActual)
   }, [])
 
   const aplicarTema = (nuevoTema: 'light' | 'dark') => {
