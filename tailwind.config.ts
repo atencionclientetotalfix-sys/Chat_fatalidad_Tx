@@ -12,33 +12,33 @@ const config: Config = {
       colors: {
         // Tema Claro (Light Mode) - Valores por defecto
         base: {
-          DEFAULT: '#f1f8f4', // Verde claro de fondo
-          light: '#e8f5e9',
-          dark: '#d4e8d9',
+          DEFAULT: '#ffffff', // Blanco para tema claro
+          light: '#f5f5f5',
+          dark: '#e0e0e0',
         },
         primary: {
-          DEFAULT: '#2d5a4a', // Verde teal oscuro (título y botón primario) - Light
-          hover: '#1a5d4a',
-          light: '#3d6a5a',
-          dark: '#70c0d8', // Azul claro para tema oscuro
-          'dark-hover': '#60b0c8',
+          DEFAULT: '#FF6B6B', // Coral/rojo-rosado vibrante
+          hover: '#ff5252',
+          light: '#ff8787',
+          dark: '#FF6B6B', // Mismo color para tema oscuro
+          'dark-hover': '#ff5252',
         },
         secondary: {
-          DEFAULT: '#4a5d3a', // Verde oliva oscuro (subtítulo y botón secundario) - Light
-          hover: '#3a4d2a',
-          light: '#5a6d4a',
-          dark: '#60b080', // Verde para tema oscuro
-          'dark-hover': '#50a070',
+          DEFAULT: '#4ECDC4', // Teal/turquesa brillante
+          hover: '#3db5ad',
+          light: '#6dd5ce',
+          dark: '#4ECDC4', // Mismo color para tema oscuro
+          'dark-hover': '#3db5ad',
         },
         accent: {
-          DEFAULT: '#60b080', // Verde vibrante
-          hover: '#50a070',
-          light: '#70c090',
+          DEFAULT: '#4ECDC4', // Teal como accent también
+          hover: '#3db5ad',
+          light: '#6dd5ce',
         },
         background: {
-          DEFAULT: '#f1f8f4', // Verde claro
-          secondary: '#e8f5e9',
-          tertiary: '#d4e8d9',
+          DEFAULT: '#ffffff', // Blanco para tema claro
+          secondary: '#f5f5f5',
+          tertiary: '#e0e0e0',
         },
         foreground: {
           DEFAULT: '#1a1a1a', // Texto oscuro
@@ -46,8 +46,8 @@ const config: Config = {
           muted: '#737373',
         },
         border: {
-          DEFAULT: '#c4d4c9',
-          light: '#d4e4d9',
+          DEFAULT: '#e0e0e0',
+          light: '#f0f0f0',
         },
       },
     },
@@ -56,38 +56,38 @@ const config: Config = {
     function ({ addBase }: any) {
       addBase({
         ':root': {
-          '--color-base': '#f1f8f4',
-          '--color-base-light': '#e8f5e9',
-          '--color-base-dark': '#d4e8d9',
-          '--color-primary': '#2d5a4a',
-          '--color-primary-hover': '#1a5d4a',
-          '--color-secondary': '#4a5d3a',
-          '--color-secondary-hover': '#3a4d2a',
-          '--color-accent': '#60b080',
-          '--color-background': '#f1f8f4',
-          '--color-background-secondary': '#e8f5e9',
-          '--color-background-tertiary': '#d4e8d9',
+          '--color-base': '#ffffff',
+          '--color-base-light': '#f5f5f5',
+          '--color-base-dark': '#e0e0e0',
+          '--color-primary': '#FF6B6B',
+          '--color-primary-hover': '#ff5252',
+          '--color-secondary': '#4ECDC4',
+          '--color-secondary-hover': '#3db5ad',
+          '--color-accent': '#4ECDC4',
+          '--color-background': '#ffffff',
+          '--color-background-secondary': '#f5f5f5',
+          '--color-background-tertiary': '#e0e0e0',
           '--color-foreground': '#1a1a1a',
           '--color-foreground-secondary': '#4a4a4a',
           '--color-foreground-muted': '#737373',
-          '--color-border': '#c4d4c9',
+          '--color-border': '#e0e0e0',
         },
         '.dark': {
-          '--color-base': '#0d1b1e',
-          '--color-base-light': '#152428',
-          '--color-base-dark': '#1d2e32',
-          '--color-primary': '#70c0d8',
-          '--color-primary-hover': '#60b0c8',
-          '--color-secondary': '#60b080',
-          '--color-secondary-hover': '#50a070',
-          '--color-accent': '#60b080',
-          '--color-background': '#0d1b1e',
-          '--color-background-secondary': '#152428',
-          '--color-background-tertiary': '#1d2e32',
-          '--color-foreground': '#c0c0c0',
-          '--color-foreground-secondary': '#a0a0a0',
+          '--color-base': '#1E1E1E',
+          '--color-base-light': '#2a2a2a',
+          '--color-base-dark': '#151515',
+          '--color-primary': '#FF6B6B',
+          '--color-primary-hover': '#ff5252',
+          '--color-secondary': '#4ECDC4',
+          '--color-secondary-hover': '#3db5ad',
+          '--color-accent': '#4ECDC4',
+          '--color-background': '#1E1E1E',
+          '--color-background-secondary': '#2a2a2a',
+          '--color-background-tertiary': '#333333',
+          '--color-foreground': '#e0e0e0',
+          '--color-foreground-secondary': '#b0b0b0',
           '--color-foreground-muted': '#808080',
-          '--color-border': '#2a3a3d',
+          '--color-border': '#3a3a3a',
         },
       })
     },
