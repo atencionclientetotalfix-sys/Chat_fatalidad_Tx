@@ -17,10 +17,10 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variantes = {
-    primary: 'bg-primary hover:bg-primary-hover text-white',
-    secondary: 'bg-secondary hover:bg-secondary-hover text-white',
-    accent: 'bg-accent hover:bg-accent-hover text-white',
-    ghost: 'bg-transparent hover:bg-background-secondary text-foreground',
+    primary: 'bg-primary dark:bg-primary hover:bg-primary-hover dark:hover:bg-primary-hover text-white',
+    secondary: 'bg-secondary dark:bg-secondary hover:bg-secondary-hover dark:hover:bg-secondary-hover text-white',
+    accent: 'bg-accent dark:bg-accent hover:bg-accent-hover dark:hover:bg-accent-hover text-white',
+    ghost: 'bg-transparent hover:bg-background-secondary dark:hover:bg-background-secondary text-foreground dark:text-foreground',
   }
 
   const tamanos = {

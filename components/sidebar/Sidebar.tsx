@@ -4,6 +4,7 @@ import { MessageSquare, Settings } from 'lucide-react'
 import { UserProfile } from './UserProfile'
 import { ChatList } from './ChatList'
 import { CambiarContraseña } from '@/components/auth/CambiarContraseña'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { Conversacion, Perfil } from '@/types'
 import { useState } from 'react'
 
@@ -44,13 +45,16 @@ export function Sidebar({
     <div className="w-64 h-screen bg-background-secondary border-r border-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <MessageSquare size={18} className="text-white" />
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary dark:bg-primary flex items-center justify-center">
+              <MessageSquare size={18} className="text-white" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground dark:text-foreground">
+              ASISTENTES HSE
+            </h2>
           </div>
-          <h2 className="text-lg font-semibold text-foreground">
-            ASISTENTES HSE
-          </h2>
+          <ThemeToggle />
         </div>
         <div className="space-y-1">
           <button
