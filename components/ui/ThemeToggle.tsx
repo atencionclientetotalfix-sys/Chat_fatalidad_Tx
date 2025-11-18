@@ -8,12 +8,38 @@ export function ThemeToggle() {
   const [montado, setMontado] = useState(false)
 
   useEffect(() => {
-    setMontado(true)
-    // Leer el tema actual del DOM (ya establecido por el script de inicialización)
-    const tieneDark = document.documentElement.classList.contains('dark')
-    const temaActual = tieneDark ? 'dark' : 'light'
+    // Leer el tema guardado o la preferencia del sistema
+    const temaGuardado = localStorage.getItem('tema') as 'light' | 'dark' | null
+    const preferenciaSistema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    const temaInicial = temaGuardado || preferenciaSistema
     
-    setTema(temaActual)
+    // Aplicar el tema inicial
+    const root = document.documentElement
+    if (temaInicial === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+    
+    setTema(temaInicial)
+    setMontado(true)
+
+    // Escuchar cambios en la preferencia del sistema
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const manejarCambio = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem('tema')) {
+        const nuevoTema = e.matches ? 'dark' : 'light'
+        if (nuevoTema === 'dark') {
+          root.classList.add('dark')
+        } else {
+          root.classList.remove('dark')
+        }
+        setTema(nuevoTema)
+      }
+    }
+    
+    mediaQuery.addEventListener('change', manejarCambio)
+    return () => mediaQuery.removeEventListener('change', manejarCambio)
   }, [])
 
   const aplicarTema = (nuevoTema: 'light' | 'dark') => {
@@ -24,11 +50,11 @@ export function ThemeToggle() {
       root.classList.remove('dark')
     }
     localStorage.setItem('tema', nuevoTema)
+    setTema(nuevoTema)
   }
 
   const alternarTema = () => {
     const nuevoTema = tema === 'light' ? 'dark' : 'light'
-    setTema(nuevoTema)
     aplicarTema(nuevoTema)
   }
 
@@ -38,6 +64,7 @@ export function ThemeToggle() {
       <button
         className="p-2 rounded-lg bg-background-tertiary text-foreground-secondary"
         aria-label="Cambiar tema"
+        disabled
       >
         <Sun size={20} />
       </button>
@@ -57,6 +84,7 @@ export function ThemeToggle() {
         shadow-sm dark:shadow-md
         hover:shadow-md dark:hover:shadow-lg
         hover:scale-105
+        focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-secondary
       "
       aria-label={`Cambiar a modo ${tema === 'light' ? 'oscuro' : 'claro'}`}
     >

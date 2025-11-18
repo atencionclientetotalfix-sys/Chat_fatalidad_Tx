@@ -42,12 +42,12 @@ export function Sidebar({
   }
 
   return (
-    <div className="w-64 h-screen bg-background-secondary border-r border-border flex flex-col">
+    <div className="w-64 h-screen bg-background-secondary dark:bg-background-secondary border-r border-border dark:border-border flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border dark:border-border">
         <div className="flex items-center justify-between gap-2 mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary dark:bg-primary flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MessageSquare size={18} className="text-white" />
             </div>
             <h2 className="text-lg font-semibold text-foreground dark:text-foreground">
@@ -64,8 +64,8 @@ export function Sidebar({
               transition-colors
               ${
                 !mostrarConfiguracion
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-foreground-secondary hover:bg-background-tertiary'
+                  ? 'bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary'
+                  : 'text-foreground-secondary dark:text-foreground-secondary hover:bg-background-tertiary dark:hover:bg-background-tertiary'
               }
             `}
           >
@@ -79,8 +79,8 @@ export function Sidebar({
               transition-colors
               ${
                 mostrarConfiguracion
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-foreground-secondary hover:bg-background-tertiary'
+                  ? 'bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary'
+                  : 'text-foreground-secondary dark:text-foreground-secondary hover:bg-background-tertiary dark:hover:bg-background-tertiary'
               }
             `}
           >
@@ -102,7 +102,7 @@ export function Sidebar({
 
       {/* Configuración */}
       {mostrarConfiguracion && (
-        <div className="flex-1 p-4 overflow-y-auto">
+        <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
           <CambiarContraseña />
         </div>
       )}

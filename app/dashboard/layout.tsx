@@ -61,12 +61,12 @@ export default async function DashboardLayout({
     }
 
     return (
-      <div className="flex h-screen bg-base">
+      <div className="flex h-screen bg-base dark:bg-base">
         <SidebarWrapper
           perfil={perfil as Perfil}
           conversaciones={(conversaciones as Conversacion[]) || []}
         />
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-hidden bg-base dark:bg-base">
           {children}
         </main>
       </div>

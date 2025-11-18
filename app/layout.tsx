@@ -22,10 +22,11 @@ const themeInitScript = `
     const preferenciaSistema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const temaInicial = temaGuardado || preferenciaSistema;
     
+    const root = document.documentElement;
     if (temaInicial === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
   } catch (e) {
     console.error('Error al inicializar tema:', e);

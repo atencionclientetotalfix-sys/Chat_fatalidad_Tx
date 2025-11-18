@@ -25,20 +25,20 @@
   }
 
   .dark {
-    /* Tema Oscuro */
-    --bg-base: #1E1E1E;
-    --bg-secondary: #2a2a2a;
-    --bg-tertiary: #333333;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-muted: #808080;
+    /* Tema Oscuro - Mejorado para contraste perfecto */
+    --bg-base: #0F0F0F;
+    --bg-secondary: #1A1A1A;
+    --bg-tertiary: #252525;
+    --text-primary: #F5F5F5;
+    --text-secondary: #D0D0D0;
+    --text-muted: #A0A0A0;
     --color-primary: #FF6B6B;
-    --color-primary-hover: #ff5252;
+    --color-primary-hover: #FF5252;
     --color-secondary: #4ECDC4;
-    --color-secondary-hover: #3db5ad;
+    --color-secondary-hover: #3DB5AD;
     --color-accent: #4ECDC4;
-    --border-color: #3a3a3a;
-    --border-light: #4a4a4a;
+    --border-color: #2A2A2A;
+    --border-light: #353535;
   }
 
   body {
@@ -54,7 +54,18 @@
     scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+  .scrollbar-hide::-webkit-scrollbar-track {
+    display: none !important;
+    background: transparent !important;
+  }
+  .scrollbar-hide::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
   }
 }
 

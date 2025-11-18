@@ -49,8 +49,8 @@ export function ChatList({
               transition-colors
               ${
                 conversacionActualId === conversacion.id
-                  ? 'bg-primary/20 border border-primary/50'
-                  : 'hover:bg-background-tertiary'
+                  ? 'bg-primary/20 dark:bg-primary/20 border border-primary/50 dark:border-primary/50'
+                  : 'hover:bg-background-tertiary dark:hover:bg-background-tertiary'
               }
             `}
             onMouseEnter={() => setHoveredId(conversacion.id)}
@@ -63,8 +63,8 @@ export function ChatList({
                 flex-shrink-0
                 ${
                   conversacionActualId === conversacion.id
-                    ? 'text-primary'
-                    : 'text-foreground-secondary'
+                    ? 'text-primary dark:text-primary'
+                    : 'text-foreground-secondary dark:text-foreground-secondary'
                 }
               `}
             />
@@ -73,8 +73,8 @@ export function ChatList({
                 flex-1 text-sm truncate
                 ${
                   conversacionActualId === conversacion.id
-                    ? 'text-foreground font-medium'
-                    : 'text-foreground-secondary'
+                    ? 'text-foreground dark:text-foreground font-medium'
+                    : 'text-foreground-secondary dark:text-foreground-secondary'
                 }
               `}
             >

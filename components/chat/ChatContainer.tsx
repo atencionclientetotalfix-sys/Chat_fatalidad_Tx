@@ -26,14 +26,14 @@ export function ChatContainer({
   }, [mensajes, cargando])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-base dark:bg-base">
       {/* Área de mensajes */}
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-hide bg-base dark:bg-base">
         {mensajes.length === 0 && !cargando && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/20 flex items-center justify-center mb-4">
               <svg
-                className="w-8 h-8 text-primary"
+                className="w-8 h-8 text-primary dark:text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -46,14 +46,14 @@ export function ChatContainer({
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
+            <h3 className="text-xl font-semibold text-foreground dark:text-foreground mb-2">
               Control de Fatalidad TX
             </h3>
-            <p className="text-foreground-secondary max-w-md">
+            <p className="text-foreground-secondary dark:text-foreground-secondary max-w-md">
               Eres un asistente experto en seguridad laboral y salud ocupacional,
               especializado en obras de construcción eléctrica de transmisión en Chile.
             </p>
-            <p className="text-foreground-muted text-sm mt-4">
+            <p className="text-foreground-muted dark:text-foreground-muted text-sm mt-4">
               Comienza a escribir para iniciar una conversación
             </p>
           </div>
@@ -65,7 +65,7 @@ export function ChatContainer({
           ))}
           {cargando && (
             <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary dark:bg-secondary flex items-center justify-center">
                 <svg
                   className="w-4 h-4 text-white animate-spin"
                   fill="none"
@@ -86,7 +86,7 @@ export function ChatContainer({
                   />
                 </svg>
               </div>
-              <div className="bg-background-secondary border border-border rounded-lg px-4 py-3">
+              <div className="bg-background-secondary dark:bg-background-secondary border border-border dark:border-border rounded-lg px-4 py-3">
                 <Loading tamaño="sm" />
               </div>
             </div>
