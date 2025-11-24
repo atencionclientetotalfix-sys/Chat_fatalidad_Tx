@@ -25,6 +25,11 @@ function RestablecerContraseñaForm() {
       const supabase = createClient()
       let timeoutId: NodeJS.Timeout | null = null
       
+      console.log('🔍 Iniciando procesamiento de código de recuperación')
+      console.log('URL completa:', typeof window !== 'undefined' ? window.location.href : 'N/A')
+      console.log('Query params:', searchParams.toString())
+      console.log('Hash:', typeof window !== 'undefined' ? window.location.hash : 'N/A')
+      
       // Función para extraer tokens del hash
       const extraerTokensDelHash = () => {
         if (typeof window === 'undefined' || !window.location.hash) return null
@@ -125,22 +130,41 @@ function RestablecerContraseñaForm() {
         const codigo = searchParams.get('code') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('code') : null)
         
         if (codigo) {
-          console.log('Procesando código de recuperación:', codigo)
+          console.log('Procesando código de recuperación:', codigo.substring(0, 20) + '...')
           
           // Intercambiar el código por una sesión usando exchangeCodeForSession
           const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
           
           if (exchangeError) {
-            console.error('Error al intercambiar código por sesión:', exchangeError)
-            // Si el código ha expirado o es inválido, mostrar mensaje específico
-            if (exchangeError.message.includes('expired') || exchangeError.message.includes('invalid') || exchangeError.message.includes('expired_token')) {
-              throw new Error('El enlace ha expirado o es inválido. Por favor solicita un nuevo enlace de recuperación.')
+            console.error('❌ Error completo de Supabase:', {
+              message: exchangeError.message,
+              status: exchangeError.status,
+              name: exchangeError.name
+            })
+            
+            // Manejar diferentes tipos de errores
+            const mensajeError = exchangeError.message.toLowerCase()
+            
+            if (mensajeError.includes('expired') || mensajeError.includes('expired_token') || mensajeError.includes('token_expired')) {
+              setError('El enlace ha expirado. Los enlaces de recuperación tienen un tiempo limitado. Por favor solicita un nuevo enlace.')
+            } else if (mensajeError.includes('invalid') || mensajeError.includes('invalid_token') || mensajeError.includes('invalid_code')) {
+              setError('El código de recuperación es inválido o ya fue utilizado. Por favor solicita un nuevo enlace.')
+            } else if (mensajeError.includes('used') || mensajeError.includes('already')) {
+              setError('Este enlace ya fue utilizado. Por favor solicita un nuevo enlace de recuperación.')
+            } else {
+              // Mostrar el error real de Supabase para debugging
+              console.error('Error desconocido:', exchangeError)
+              setError(`Error al verificar el enlace: ${exchangeError.message}. Por favor solicita un nuevo enlace.`)
             }
-            throw exchangeError
+            
+            if (timeoutId) clearTimeout(timeoutId)
+            setVerificandoToken(false)
+            setTokenValido(false)
+            return
           }
           
           if (exchangeData?.session) {
-            console.log('✅ Sesión establecida después de intercambiar código')
+            console.log('✅ Sesión establecida correctamente después de intercambiar código')
             if (timeoutId) clearTimeout(timeoutId)
             setTokenValido(true)
             setVerificandoToken(false)
@@ -149,8 +173,12 @@ function RestablecerContraseñaForm() {
             }
             return
           } else {
-            console.error('No se recibió sesión después del intercambio')
-            throw new Error('No se pudo establecer la sesión con el código proporcionado')
+            console.error('⚠️ No se recibió sesión después del intercambio, pero tampoco hubo error')
+            setError('No se pudo establecer la sesión. Por favor solicita un nuevo enlace de recuperación.')
+            if (timeoutId) clearTimeout(timeoutId)
+            setVerificandoToken(false)
+            setTokenValido(false)
+            return
           }
         }
         
@@ -164,9 +192,19 @@ function RestablecerContraseñaForm() {
         setTokenValido(false)
         
       } catch (err: any) {
-        console.error('Error al procesar código de recuperación:', err)
+        console.error('❌ Error inesperado al procesar código de recuperación:', err)
         if (timeoutId) clearTimeout(timeoutId)
-        setError(`Error al verificar el enlace: ${err.message || 'Error desconocido'}. Por favor solicita uno nuevo.`)
+        
+        // Solo establecer error si no se estableció antes
+        if (!error) {
+          const mensajeError = err?.message?.toLowerCase() || ''
+          if (mensajeError.includes('expired') || mensajeError.includes('invalid')) {
+            setError('El enlace ha expirado o es inválido. Por favor solicita un nuevo enlace de recuperación.')
+          } else {
+            setError(`Error inesperado: ${err.message || 'Error desconocido'}. Por favor solicita un nuevo enlace.`)
+          }
+        }
+        
         setVerificandoToken(false)
         setTokenValido(false)
       }
