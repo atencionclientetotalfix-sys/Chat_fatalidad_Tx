@@ -30,6 +30,59 @@ function RestablecerContraseñaForm() {
       console.log('Query params:', searchParams.toString())
       console.log('Hash:', typeof window !== 'undefined' ? window.location.hash : 'N/A')
       
+      // PRIMERO: Verificar si Supabase envió parámetros de error
+      const errorParam = searchParams.get('error') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('error') : null)
+      const errorCode = searchParams.get('error_code') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('error_code') : null)
+      const errorDescription = searchParams.get('error_description') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('error_description') : null)
+      
+      // También verificar en el hash
+      let hashError = null
+      let hashErrorCode = null
+      let hashErrorDescription = null
+      if (typeof window !== 'undefined' && window.location.hash) {
+        try {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1))
+          hashError = hashParams.get('error')
+          hashErrorCode = hashParams.get('error_code')
+          hashErrorDescription = hashParams.get('error_description')
+        } catch (e) {
+          console.error('Error al parsear hash:', e)
+        }
+      }
+      
+      const errorFinal = errorParam || hashError
+      const errorCodeFinal = errorCode || hashErrorCode
+      const errorDescriptionFinal = errorDescription || hashErrorDescription
+      
+      if (errorFinal) {
+        console.error('❌ Supabase detectó un error:', {
+          error: errorFinal,
+          error_code: errorCodeFinal,
+          error_description: errorDescriptionFinal
+        })
+        
+        // Limpiar la URL de parámetros de error
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/restablecer-contraseña')
+        }
+        
+        // Mostrar mensaje apropiado según el tipo de error
+        if (errorCodeFinal === 'otp_expired' || errorFinal === 'access_denied') {
+          setError('El enlace de recuperación ha expirado. Los enlaces tienen un tiempo limitado de validez. Por favor solicita un nuevo enlace.')
+        } else if (errorCodeFinal === 'invalid_token' || errorCodeFinal === 'invalid_request') {
+          setError('El enlace de recuperación es inválido o ya fue utilizado. Por favor solicita un nuevo enlace.')
+        } else {
+          const descripcion = errorDescriptionFinal 
+            ? decodeURIComponent(errorDescriptionFinal.replace(/\+/g, ' '))
+            : 'Error desconocido'
+          setError(`Error al verificar el enlace: ${descripcion}. Por favor solicita un nuevo enlace.`)
+        }
+        
+        setVerificandoToken(false)
+        setTokenValido(false)
+        return
+      }
+      
       // Función para extraer tokens del hash
       const extraerTokensDelHash = () => {
         if (typeof window === 'undefined' || !window.location.hash) return null
