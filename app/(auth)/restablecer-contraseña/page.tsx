@@ -125,15 +125,22 @@ function RestablecerContraseñaForm() {
         const codigo = searchParams.get('code') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('code') : null)
         
         if (codigo) {
-          console.log('Intentando procesar código de query params...')
-          // Para códigos en query params, Supabase debería procesarlos automáticamente
-          // Esperar un momento y verificar la sesión
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          console.log('Procesando código de recuperación:', codigo)
           
-          const { data: { session: sessionDespues }, error: errorDespues } = await supabase.auth.getSession()
+          // Intercambiar el código por una sesión usando exchangeCodeForSession
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
           
-          if (sessionDespues) {
-            console.log('✅ Sesión establecida después de procesar código')
+          if (exchangeError) {
+            console.error('Error al intercambiar código por sesión:', exchangeError)
+            // Si el código ha expirado o es inválido, mostrar mensaje específico
+            if (exchangeError.message.includes('expired') || exchangeError.message.includes('invalid') || exchangeError.message.includes('expired_token')) {
+              throw new Error('El enlace ha expirado o es inválido. Por favor solicita un nuevo enlace de recuperación.')
+            }
+            throw exchangeError
+          }
+          
+          if (exchangeData?.session) {
+            console.log('✅ Sesión establecida después de intercambiar código')
             if (timeoutId) clearTimeout(timeoutId)
             setTokenValido(true)
             setVerificandoToken(false)
@@ -141,6 +148,9 @@ function RestablecerContraseñaForm() {
               window.history.replaceState({}, '', '/restablecer-contraseña')
             }
             return
+          } else {
+            console.error('No se recibió sesión después del intercambio')
+            throw new Error('No se pudo establecer la sesión con el código proporcionado')
           }
         }
         
