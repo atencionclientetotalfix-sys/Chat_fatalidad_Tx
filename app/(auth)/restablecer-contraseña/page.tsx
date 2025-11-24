@@ -26,9 +26,15 @@ function RestablecerContraseñaForm() {
       let timeoutId: NodeJS.Timeout | null = null
       
       console.log('🔍 Iniciando procesamiento de código de recuperación')
-      console.log('URL completa:', typeof window !== 'undefined' ? window.location.href : 'N/A')
-      console.log('Query params:', searchParams.toString())
-      console.log('Hash:', typeof window !== 'undefined' ? window.location.hash : 'N/A')
+      console.log('📋 Información de la URL:', {
+        href_completa: typeof window !== 'undefined' ? window.location.href : 'N/A',
+        origin: typeof window !== 'undefined' ? window.location.origin : 'N/A',
+        pathname: typeof window !== 'undefined' ? window.location.pathname : 'N/A',
+        search: typeof window !== 'undefined' ? window.location.search : 'N/A',
+        hash: typeof window !== 'undefined' ? window.location.hash : 'N/A',
+        query_params: searchParams.toString(),
+        code_param: searchParams.get('code') || 'No encontrado'
+      })
       
       // PRIMERO: Verificar si Supabase envió parámetros de error
       const errorParam = searchParams.get('error') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('error') : null)
@@ -183,31 +189,63 @@ function RestablecerContraseñaForm() {
         const codigo = searchParams.get('code') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('code') : null)
         
         if (codigo) {
-          console.log('Procesando código de recuperación:', codigo.substring(0, 20) + '...')
+          console.log('🔍 Procesando código de recuperación:', codigo.substring(0, 20) + '...')
+          console.log('📋 Detalles del código:', {
+            longitud: codigo.length,
+            formato: codigo.substring(0, 8) + '...' + codigo.substring(codigo.length - 8),
+            codigo_completo: codigo // Para debugging completo
+          })
           
           // Intercambiar el código por una sesión usando exchangeCodeForSession
           const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codigo)
           
           if (exchangeError) {
+            // Logging completo del error para diagnóstico
             console.error('❌ Error completo de Supabase:', {
               message: exchangeError.message,
               status: exchangeError.status,
               name: exchangeError.name
             })
             
-            // Manejar diferentes tipos de errores
-            const mensajeError = exchangeError.message.toLowerCase()
+            // Log del objeto completo para ver todas las propiedades
+            console.error('❌ Objeto de error completo:', exchangeError)
+            console.error('❌ Error serializado:', JSON.stringify(exchangeError, Object.getOwnPropertyNames(exchangeError), 2))
             
-            if (mensajeError.includes('expired') || mensajeError.includes('expired_token') || mensajeError.includes('token_expired')) {
-              setError('El enlace ha expirado. Los enlaces de recuperación tienen un tiempo limitado. Por favor solicita un nuevo enlace.')
-            } else if (mensajeError.includes('invalid') || mensajeError.includes('invalid_token') || mensajeError.includes('invalid_code')) {
-              setError('El código de recuperación es inválido o ya fue utilizado. Por favor solicita un nuevo enlace.')
-            } else if (mensajeError.includes('used') || mensajeError.includes('already')) {
-              setError('Este enlace ya fue utilizado. Por favor solicita un nuevo enlace de recuperación.')
+            // Manejar diferentes tipos de errores con más detalle
+            const mensajeError = (exchangeError.message || '').toLowerCase()
+            const statusCode = exchangeError.status
+            
+            // Error 400 específico - código inválido o mal formado
+            if (statusCode === 400) {
+              console.error('⚠️ Error 400 detectado - Código inválido o expirado')
+              
+              if (mensajeError.includes('expired') || mensajeError.includes('expired_token') || mensajeError.includes('token_expired') || mensajeError.includes('otp_expired')) {
+                setError('El enlace ha expirado. Los enlaces de recuperación tienen un tiempo limitado (típicamente 1 hora). Por favor solicita un nuevo enlace.')
+              } else if (mensajeError.includes('invalid') || mensajeError.includes('invalid_token') || mensajeError.includes('invalid_code') || mensajeError.includes('invalid_request')) {
+                setError('El código de recuperación es inválido o ya fue utilizado. Los códigos solo pueden usarse una vez. Por favor solicita un nuevo enlace.')
+              } else if (mensajeError.includes('used') || mensajeError.includes('already')) {
+                setError('Este enlace ya fue utilizado. Por favor solicita un nuevo enlace de recuperación.')
+              } else {
+                // Mostrar el mensaje completo del error 400 para debugging
+                const mensajeCompleto = exchangeError.message || 'Código inválido o expirado'
+                console.error('⚠️ Error 400 con mensaje:', mensajeCompleto)
+                setError(`Error al procesar el código de recuperación: ${mensajeCompleto}. Por favor solicita un nuevo enlace.`)
+              }
+            } else if (statusCode === 401 || statusCode === 403) {
+              setError('No tienes autorización para usar este enlace. Por favor solicita un nuevo enlace de recuperación.')
+            } else if (statusCode === 404) {
+              setError('El código de recuperación no fue encontrado. Por favor solicita un nuevo enlace.')
+            } else if (statusCode === 429) {
+              setError('Demasiados intentos. Por favor espera unos minutos antes de solicitar un nuevo enlace.')
             } else {
               // Mostrar el error real de Supabase para debugging
-              console.error('Error desconocido:', exchangeError)
-              setError(`Error al verificar el enlace: ${exchangeError.message}. Por favor solicita un nuevo enlace.`)
+              console.error('⚠️ Error desconocido:', {
+                status: statusCode,
+                message: exchangeError.message,
+                error: exchangeError
+              })
+              const mensajeErrorFinal = exchangeError.message || `Error ${statusCode || 'desconocido'}`
+              setError(`Error al verificar el enlace (${statusCode || 'desconocido'}): ${mensajeErrorFinal}. Por favor solicita un nuevo enlace.`)
             }
             
             if (timeoutId) clearTimeout(timeoutId)
