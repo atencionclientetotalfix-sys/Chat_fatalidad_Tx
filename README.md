@@ -137,19 +137,16 @@ El sistema incluye un sistema completo de gestión de contraseñas integrado con
 
 ### Configuración Requerida
 
-**En Supabase Dashboard:**
-1. Ve a **Authentication** → **URL Configuration**
-2. Agrega las siguientes URLs en **Redirect URLs**:
-   ```
-   http://localhost:3000/restablecer-contraseña
-   https://tu-dominio.vercel.app/restablecer-contraseña
-   ```
+**⚠️ IMPORTANTE:** Para que funcione correctamente en producción, debes configurar:
 
-**Variables de Entorno:**
-- `NEXT_PUBLIC_APP_URL`: URL base de la aplicación (requerida para redirects)
+1. **En Vercel:** Variable de entorno `NEXT_PUBLIC_APP_URL` con tu URL de producción
+2. **En Supabase:** URLs de redirección en Authentication → URL Configuration
 
-Para más detalles, consulta:
-- `CONFIGURACION_RECUPERACION_CLAVE.md` - Guía completa de configuración
+**Guía detallada paso a paso:**
+- 📖 **`GUIA_CONFIGURACION_VERCEL_SUPABASE.md`** - Guía completa y detallada de configuración
+
+**Otras guías relacionadas:**
+- `CONFIGURACION_RECUPERACION_CLAVE.md` - Guía de configuración básica
 - `AUDITORIA_GESTION_CONTRASEÑAS.md` - Auditoría técnica del sistema
 
 ## 📝 Funcionalidades del Chat

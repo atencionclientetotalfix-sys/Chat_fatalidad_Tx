@@ -37,10 +37,22 @@ export default function RecuperarContraseñaPage() {
       }
 
       const supabase = createClient()
-      // Usar NEXT_PUBLIC_APP_URL si está disponible, sino usar window.location.origin
-      const urlBase = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      // Detectar URL base: en producción usar NEXT_PUBLIC_APP_URL, en desarrollo usar window.location.origin
+      // En el cliente, process.env solo funciona para variables NEXT_PUBLIC_*
+      let urlBase = window.location.origin
+      
+      // Si estamos en producción y NEXT_PUBLIC_APP_URL está configurada, usarla
+      if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
+        urlBase = process.env.NEXT_PUBLIC_APP_URL
+      }
+      
+      // Asegurar que no termine con /
+      urlBase = urlBase.replace(/\/$/, '')
+      
+      const redirectUrl = `${urlBase}/restablecer-contraseña`
+      
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${urlBase}/restablecer-contraseña`,
+        redirectTo: redirectUrl,
       })
 
       if (resetError) {

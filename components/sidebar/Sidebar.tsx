@@ -1,13 +1,10 @@
 'use client'
 
-import { MessageSquare, Settings, Lock } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import { UserProfile } from './UserProfile'
 import { ChatList } from './ChatList'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { Button } from '@/components/ui/button'
 import { Conversacion, Perfil } from '@/types'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 interface SidebarProps {
   perfil: Perfil
@@ -20,8 +17,6 @@ export function Sidebar({
   conversaciones,
   conversacionActualId,
 }: SidebarProps) {
-  const router = useRouter()
-  const [mostrarConfiguracion, setMostrarConfiguracion] = useState(false)
 
   const handleNuevaConversacion = () => {
     window.location.href = '/dashboard'
@@ -59,76 +54,20 @@ export function Sidebar({
           <ThemeToggle />
         </div>
         <div className="space-y-1">
-          <button
-            onClick={() => setMostrarConfiguracion(false)}
-            className={`
-              w-full text-left px-3 py-2 rounded-lg text-sm
-              transition-colors
-              ${
-                !mostrarConfiguracion
-                  ? 'bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary'
-                  : 'text-foreground-secondary dark:text-foreground-secondary hover:bg-background-tertiary dark:hover:bg-background-tertiary'
-              }
-            `}
-          >
+          <div className="px-3 py-2 rounded-lg text-sm bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary">
             <MessageSquare size={16} className="inline mr-2" />
             Control de Fatalidad TX
-          </button>
-          <button
-            onClick={() => setMostrarConfiguracion(true)}
-            className={`
-              w-full text-left px-3 py-2 rounded-lg text-sm
-              transition-colors
-              ${
-                mostrarConfiguracion
-                  ? 'bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary'
-                  : 'text-foreground-secondary dark:text-foreground-secondary hover:bg-background-tertiary dark:hover:bg-background-tertiary'
-              }
-            `}
-          >
-            <Settings size={16} className="inline mr-2" />
-            Configuración
-          </button>
+          </div>
         </div>
       </div>
 
       {/* Chat List */}
-      {!mostrarConfiguracion && (
-        <ChatList
-          conversaciones={conversaciones}
-          conversacionActualId={conversacionActualId}
-          onNuevaConversacion={handleNuevaConversacion}
-          onEliminarConversacion={handleEliminarConversacion}
-        />
-      )}
-
-      {/* Configuración */}
-      {mostrarConfiguracion && (
-        <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Configuración
-              </h3>
-              <p className="text-sm text-foreground-secondary mb-4">
-                Gestiona la configuración de tu cuenta
-              </p>
-            </div>
-            <Button
-              variante="primary"
-              tamaño="md"
-              className="w-full"
-              onClick={() => router.push('/cambiar-contraseña')}
-            >
-              <Lock size={18} />
-              Cambiar contraseña
-            </Button>
-            <p className="text-xs text-foreground-secondary mt-4">
-              Para recuperar tu contraseña si la olvidaste, ve a la página de inicio de sesión.
-            </p>
-          </div>
-        </div>
-      )}
+      <ChatList
+        conversaciones={conversaciones}
+        conversacionActualId={conversacionActualId}
+        onNuevaConversacion={handleNuevaConversacion}
+        onEliminarConversacion={handleEliminarConversacion}
+      />
 
       {/* User Profile */}
       <UserProfile email={perfil.email} nombre={perfil.nombre} />
