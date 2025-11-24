@@ -111,6 +111,47 @@ asistentehsetchegaray/
 - **Rate limiting**: Implementado en todas las rutas de API críticas
 - **Cierre automático de sesión**: Si un usuario es desactivado, su sesión se cierra automáticamente
 
+## 🔑 Gestión de Contraseñas
+
+El sistema incluye un sistema completo de gestión de contraseñas integrado con Supabase:
+
+### Funcionalidades Disponibles
+
+1. **Recuperación de Contraseña** (`/recuperar-contraseña`)
+   - Para usuarios que olvidaron su contraseña
+   - Verificación de email autorizado antes de enviar
+   - Envío de email con enlace de recuperación
+   - Página pública (no requiere autenticación)
+
+2. **Restablecimiento de Contraseña** (`/restablecer-contraseña`)
+   - Para usuarios que recibieron el enlace de recuperación
+   - Verificación automática de token
+   - Establecimiento de nueva contraseña
+   - Página pública (requiere token válido)
+
+3. **Cambio de Contraseña** (`/cambiar-contraseña`)
+   - Para usuarios autenticados que quieren cambiar su contraseña
+   - Verificación de contraseña actual
+   - Validación de nueva contraseña
+   - Página protegida (requiere autenticación)
+
+### Configuración Requerida
+
+**En Supabase Dashboard:**
+1. Ve a **Authentication** → **URL Configuration**
+2. Agrega las siguientes URLs en **Redirect URLs**:
+   ```
+   http://localhost:3000/restablecer-contraseña
+   https://tu-dominio.vercel.app/restablecer-contraseña
+   ```
+
+**Variables de Entorno:**
+- `NEXT_PUBLIC_APP_URL`: URL base de la aplicación (requerida para redirects)
+
+Para más detalles, consulta:
+- `CONFIGURACION_RECUPERACION_CLAVE.md` - Guía completa de configuración
+- `AUDITORIA_GESTION_CONTRASEÑAS.md` - Auditoría técnica del sistema
+
 ## 📝 Funcionalidades del Chat
 
 ### Control de Fatalidad TX

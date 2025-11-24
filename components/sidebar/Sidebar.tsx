@@ -1,12 +1,13 @@
 'use client'
 
-import { MessageSquare, Settings } from 'lucide-react'
+import { MessageSquare, Settings, Lock } from 'lucide-react'
 import { UserProfile } from './UserProfile'
 import { ChatList } from './ChatList'
-import { CambiarContraseña } from '@/components/auth/CambiarContraseña'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { Button } from '@/components/ui/button'
 import { Conversacion, Perfil } from '@/types'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface SidebarProps {
   perfil: Perfil
@@ -19,6 +20,7 @@ export function Sidebar({
   conversaciones,
   conversacionActualId,
 }: SidebarProps) {
+  const router = useRouter()
   const [mostrarConfiguracion, setMostrarConfiguracion] = useState(false)
 
   const handleNuevaConversacion = () => {
@@ -103,7 +105,28 @@ export function Sidebar({
       {/* Configuración */}
       {mostrarConfiguracion && (
         <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
-          <CambiarContraseña />
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Configuración
+              </h3>
+              <p className="text-sm text-foreground-secondary mb-4">
+                Gestiona la configuración de tu cuenta
+              </p>
+            </div>
+            <Button
+              variante="primary"
+              tamaño="md"
+              className="w-full"
+              onClick={() => router.push('/cambiar-contraseña')}
+            >
+              <Lock size={18} />
+              Cambiar contraseña
+            </Button>
+            <p className="text-xs text-foreground-secondary mt-4">
+              Para recuperar tu contraseña si la olvidaste, ve a la página de inicio de sesión.
+            </p>
+          </div>
         </div>
       )}
 

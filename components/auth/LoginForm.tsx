@@ -17,13 +17,20 @@ export function LoginForm() {
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
 
-  // Verificar si hay mensajes de error en la URL
+  // Verificar si hay mensajes de error o redirect en la URL
   useEffect(() => {
     const errorParam = searchParams.get('error')
+    const redirectParam = searchParams.get('redirect')
+    
     if (errorParam === 'no_autorizado') {
       setError('Tu acceso ha sido revocado. Por favor contacta al administrador.')
     } else if (errorParam === 'email_no_disponible') {
       setError('No se pudo verificar tu email. Por favor intenta nuevamente.')
+    }
+    
+    // Si hay un redirect, guardarlo para después del login
+    if (redirectParam) {
+      // Se manejará en handleSubmit después del login exitoso
     }
   }, [searchParams])
 
@@ -65,7 +72,12 @@ export function LoginForm() {
       }
 
       if (data.session) {
-        router.push('/dashboard')
+        // Verificar si hay un redirect en la URL
+        const redirectParam = searchParams.get('redirect')
+        const destino = redirectParam === 'cambiar-contraseña' 
+          ? '/cambiar-contraseña' 
+          : '/dashboard'
+        router.push(destino)
         router.refresh()
       }
     } catch (err) {

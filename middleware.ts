@@ -2,8 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 
-export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+export async function middleware(request: NextRequest) {  const pathname = request.nextUrl.pathname
   
   // Permitir que las rutas de recuperación de contraseña pasen sin verificación
   if (
@@ -13,6 +12,8 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next()
   }
+
+  // La ruta /cambiar-contraseña requiere autenticación, se manejará después
 
   // Verificar que las variables de entorno estén disponibles
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -56,10 +57,18 @@ export async function middleware(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
 
-    // Proteger rutas del dashboard
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/chat')) {
+    // Proteger rutas del dashboard y cambiar contraseña (requieren autenticación)
+    if (
+      pathname.startsWith('/dashboard') || 
+      pathname.startsWith('/chat') ||
+      pathname === '/cambiar-contraseña'
+    ) {
       if (!session) {
-        return NextResponse.redirect(new URL('/login', request.url))
+        // Guardar la ruta de destino para redirigir después del login
+        const redirectUrl = pathname === '/cambiar-contraseña' 
+          ? '/login?redirect=cambiar-contraseña'
+          : '/login'
+        return NextResponse.redirect(new URL(redirectUrl, request.url))
       }
 
       // Verificar que el usuario esté en la tabla de usuarios permitidos
