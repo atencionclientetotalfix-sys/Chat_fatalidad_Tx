@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "verificar-env": "node scripts/verificar_env.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

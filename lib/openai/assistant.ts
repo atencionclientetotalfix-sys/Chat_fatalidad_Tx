@@ -26,6 +26,14 @@ export async function enviarMensaje(
   contenido: string,
   archivos?: string[]
 ) {
+  if (!ASSISTANT_ID) {
+    throw new Error('OPENAI_ASSISTANT_ID no está configurado. Por favor, configura esta variable de entorno.')
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY no está configurada. Por favor, configura esta variable de entorno.')
+  }
+
   const mensaje = await openai.beta.threads.messages.create(threadId, {
     role: 'user',
     content: contenido,
@@ -52,8 +60,15 @@ export async function obtenerMensajes(threadId: string) {
   return mensajes.data
     .filter((msg) => (msg.role as string) !== 'system')
     .map((msg) => {
+      // Verificar que existe contenido y que tiene al menos un elemento
+      if (!msg.content || msg.content.length === 0) {
+        return null
+      }
+
       const contenido = msg.content[0]
-      if (contenido.type === 'text') {
+      
+      // Verificar que el contenido es de tipo texto
+      if (contenido && contenido.type === 'text' && 'text' in contenido) {
         return {
           id: msg.id,
           rol: msg.role,
@@ -61,9 +76,10 @@ export async function obtenerMensajes(threadId: string) {
           creado_en: new Date(msg.created_at * 1000).toISOString(),
         }
       }
+      
       return null
     })
-    .filter(Boolean)
+    .filter((msg): msg is NonNullable<typeof msg> => msg !== null)
 }
 
 export async function subirArchivo(archivo: File): Promise<string> {

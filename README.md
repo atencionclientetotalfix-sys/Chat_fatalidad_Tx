@@ -37,30 +37,15 @@ npm install
 ```
 
 3. Configurar variables de entorno:
-Crear archivo `.env.local` basado en `.env.example`:
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=tu_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=tu_supabase_service_role_key
-
-# OpenAI
-OPENAI_API_KEY=tu_openai_api_key
-OPENAI_ASSISTANT_ID=asst_6s4kpekduMglBWAJxiVdmnAy
-
-# Email permitido
-ALLOWED_EMAIL=fernando.etchegaray@qualivita.cl
-
-# Next.js
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+   - Ver sección [Variables de Entorno](#-documentación-técnica) en `DOCS.md`
+   - Crear archivo `.env.local` en la raíz del proyecto con todas las variables requeridas
 
 4. Configurar Supabase:
    - Crear proyecto en [Supabase](https://supabase.com)
    - Ejecutar la migración SQL en `supabase/migrations/001_initial_schema.sql`
    - Ejecutar la migración SQL en `supabase/migrations/002_usuarios_permitidos.sql` (para usuarios permitidos)
    - Configurar Row Level Security (RLS) según las políticas en las migraciones
-   - Agregar usuarios permitidos en la tabla `usuarios_permitidos` (ver `INSTRUCCIONES_USUARIOS_PERMITIDOS.md`)
+   - Agregar usuarios permitidos en la tabla `usuarios_permitidos` (ver sección [Configuración de Usuarios Permitidos](#-documentación-técnica) en `DOCS.md`)
 
 5. Ejecutar en desarrollo:
 ```bash
@@ -142,12 +127,7 @@ El sistema incluye un sistema completo de gestión de contraseñas integrado con
 1. **En Vercel:** Variable de entorno `NEXT_PUBLIC_APP_URL` con tu URL de producción
 2. **En Supabase:** URLs de redirección en Authentication → URL Configuration
 
-**Guía detallada paso a paso:**
-- 📖 **`GUIA_CONFIGURACION_VERCEL_SUPABASE.md`** - Guía completa y detallada de configuración
-
-**Otras guías relacionadas:**
-- `CONFIGURACION_RECUPERACION_CLAVE.md` - Guía de configuración básica
-- `AUDITORIA_GESTION_CONTRASEÑAS.md` - Auditoría técnica del sistema
+**Guía detallada:** Ver sección [Configuración de Recuperación de Contraseña](#-documentación-técnica) en `DOCS.md`
 
 ## 📝 Funcionalidades del Chat
 
@@ -168,35 +148,13 @@ El asistente está configurado como experto en:
 
 ## 🚢 Despliegue
 
-### Vercel (Recomendado)
+Para instrucciones detalladas de despliegue en Vercel, configuración de variables de entorno y solución de problemas, consulta la sección [Despliegue en Vercel](#-documentación-técnica) en `DOCS.md`.
 
-1. **Conectar el repositorio:**
-   - Ve a [Vercel Dashboard](https://vercel.com/dashboard)
-   - Haz clic en "Add New Project"
-   - Importa el repositorio de GitHub: `https://github.com/atencionclientetotalfix-sys/Chat_fatalidad_Tx.git`
-   - Vercel detectará automáticamente Next.js
+**Resumen rápido:**
+1. Conectar repositorio en Vercel
+2. Configurar variables de entorno (ver `DOCS.md`)
+3. Desplegar automáticamente o manualmente
 
-2. **Configurar variables de entorno:**
-   En el dashboard de Vercel, ve a Settings → Environment Variables y agrega:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=tu_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=tu_supabase_service_role_key
-   OPENAI_API_KEY=tu_openai_api_key
-   OPENAI_ASSISTANT_ID=asst_6s4kpekduMglBWAJxiVdmnAy
-   ALLOWED_EMAIL=fernando.etchegaray@qualivita.cl
-   NEXT_PUBLIC_APP_URL=https://tu-dominio.vercel.app
-   ```
-
-3. **Configurar dominio:**
-   - En Project Settings → Domains
-   - Agrega tu dominio personalizado si lo tienes
-
-4. **Desplegar:**
-   - Vercel desplegará automáticamente en cada push a `main`
-   - O haz clic en "Deploy" para el primer despliegue
-
-### Variables de entorno en producción:
 ⚠️ **IMPORTANTE**: Asegúrate de configurar todas las variables de entorno en Vercel. No uses archivos `.env` en producción.
 
 ### Build y Deploy
@@ -283,12 +241,12 @@ Este proyecto es privado y exclusivo para el Sr. Fernando Etchegaray S.
 
 ### Documentación y Herramientas de Verificación
 
-- ✅ **Guías de verificación**: Creadas guías completas para verificar el sistema
-  - `GUIA_VERIFICACION.md` - Guía paso a paso de verificación
-  - `CHECKLIST_VERIFICACION.md` - Checklist de verificación
-  - `TESTING.md` - Guía de testing con escenarios de prueba
-  - `RESUMEN_VERIFICACION.md` - Resumen ejecutivo de verificaciones
+- ✅ **Documentación consolidada**: Toda la documentación técnica está en `DOCS.md`
+  - Variables de entorno y configuración
+  - Guías de despliegue y verificación
+  - Testing y solución de problemas
 - ✅ **Scripts de verificación**: Scripts automatizados para verificar configuración
+  - `npm run verificar-env` - Verifica variables de entorno
   - `backend/scripts/verificar_configuracion.py` - Script Python de verificación
   - `supabase/verificar_migraciones.sql` - Script SQL de verificación
 
@@ -307,6 +265,19 @@ Este proyecto es privado y exclusivo para el Sr. Fernando Etchegaray S.
 - Soporte para múltiples chats adicionales
 - Mejoras en la interfaz de usuario
 - Funcionalidades adicionales según necesidades
+
+---
+
+## 📚 Documentación Técnica
+
+Para documentación técnica completa, consulta **[DOCS.md](./DOCS.md)** que incluye:
+
+- 🔧 Variables de entorno y configuración
+- 👥 Configuración de usuarios permitidos
+- 🚀 Guía completa de despliegue en Vercel
+- 🔐 Configuración de recuperación de contraseña
+- ✅ Guías de verificación y testing
+- 🐛 Solución de problemas comunes
 
 ---
 

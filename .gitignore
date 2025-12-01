@@ -59,5 +59,6 @@ Thumbs.db
 # IDE
 *.sublime-project
 *.sublime-workspace
+.cursor/
 
 

@@ -15,6 +15,7 @@ export default function ChatPage() {
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [cargando, setCargando] = useState(false)
   const [cargandoMensajes, setCargandoMensajes] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     cargarMensajes()
@@ -22,13 +23,18 @@ export default function ChatPage() {
 
   const cargarMensajes = async () => {
     try {
+      setError(null)
       const response = await fetch(`/api/chat/mensajes?conversacionId=${chatId}`)
       if (response.ok) {
         const data = await response.json()
         setMensajes(data.mensajes || [])
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Error al cargar mensajes' }))
+        setError(errorData.error || 'Error al cargar mensajes')
       }
     } catch (error) {
       console.error('Error al cargar mensajes:', error)
+      setError('Error de conexión al cargar mensajes')
     } finally {
       setCargandoMensajes(false)
     }
@@ -39,6 +45,7 @@ export default function ChatPage() {
     archivos: ArchivoAdjunto[]
   ) => {
     setCargando(true)
+    setError(null)
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -50,7 +57,10 @@ export default function ChatPage() {
         }),
       })
 
-      if (!response.ok) throw new Error('Error al enviar mensaje')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error al enviar mensaje' }))
+        throw new Error(errorData.error || 'Error al enviar mensaje')
+      }
 
       const { mensajeUsuario, mensajeAsistente } = await response.json()
 
@@ -61,6 +71,8 @@ export default function ChatPage() {
       ])
     } catch (error) {
       console.error('Error:', error)
+      const mensajeError = error instanceof Error ? error.message : 'Error al enviar mensaje'
+      setError(mensajeError)
     } finally {
       setCargando(false)
     }
@@ -169,6 +181,21 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* Mensaje de error */}
+      {error && (
+        <div className="mx-6 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Chat Container */}
       <ChatContainer
