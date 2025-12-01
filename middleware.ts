@@ -2,7 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
 
-export async function middleware(request: NextRequest) {  const pathname = request.nextUrl.pathname
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
   
   // Permitir que las rutas de recuperación de contraseña pasen sin verificación
   if (
