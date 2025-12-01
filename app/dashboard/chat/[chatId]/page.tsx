@@ -44,9 +44,22 @@ export default function ChatPage() {
     mensaje: string,
     archivos: ArchivoAdjunto[]
   ) => {
+    if (!mensaje.trim() && archivos.length === 0) {
+      setError('Por favor, escribe un mensaje o adjunta un archivo')
+      return
+    }
+
+    if (!chatId) {
+      setError('Error: No se encontró el ID de la conversación')
+      return
+    }
+
     setCargando(true)
     setError(null)
+    
     try {
+      console.log('Enviando mensaje:', { conversacionId: chatId, mensaje: mensaje.substring(0, 50) + '...', archivos: archivos.length })
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,12 +70,22 @@ export default function ChatPage() {
         }),
       })
 
+      console.log('Respuesta recibida:', { status: response.status, ok: response.ok })
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Error al enviar mensaje' }))
-        throw new Error(errorData.error || 'Error al enviar mensaje')
+        console.error('Error en respuesta:', errorData)
+        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`)
       }
 
-      const { mensajeUsuario, mensajeAsistente } = await response.json()
+      const data = await response.json()
+      console.log('Datos recibidos:', { mensajeUsuario: !!data.mensajeUsuario, mensajeAsistente: !!data.mensajeAsistente })
+
+      const { mensajeUsuario, mensajeAsistente } = data
+
+      if (!mensajeUsuario) {
+        throw new Error('No se recibió confirmación del mensaje enviado')
+      }
 
       setMensajes((prev) => [
         ...prev,
@@ -70,9 +93,11 @@ export default function ChatPage() {
         ...(mensajeAsistente ? [mensajeAsistente] : []),
       ])
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error completo:', error)
       const mensajeError = error instanceof Error ? error.message : 'Error al enviar mensaje'
       setError(mensajeError)
+      // Mostrar error también en consola para debugging
+      console.error('Error al enviar mensaje:', mensajeError)
     } finally {
       setCargando(false)
     }
@@ -184,12 +209,16 @@ export default function ChatPage() {
 
       {/* Mensaje de error */}
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+        <div className="mx-6 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-in slide-in-from-top-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al enviar mensaje</p>
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            </div>
             <button
               onClick={() => setError(null)}
-              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+              className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xl font-bold"
+              aria-label="Cerrar error"
             >
               ×
             </button>

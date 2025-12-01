@@ -7,7 +7,7 @@ import { FileUpload } from './FileUpload'
 import { ArchivoAdjunto } from '@/types'
 
 interface ChatInputProps {
-  onEnviar: (mensaje: string, archivos: ArchivoAdjunto[]) => void
+  onEnviar: (mensaje: string, archivos: ArchivoAdjunto[]) => Promise<void>
   cargando: boolean
   onSubirArchivo: (archivo: File) => Promise<string>
 }
@@ -29,16 +29,36 @@ export function ChatInput({
     }
   }, [mensaje])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if ((mensaje.trim() || archivos.length > 0) && !cargando) {
-      onEnviar(mensaje, archivos)
+    
+    // Validación antes de enviar
+    if (!mensaje.trim() && archivos.length === 0) {
+      console.warn('Intento de enviar mensaje vacío')
+      return
+    }
+    
+    if (cargando) {
+      console.warn('Ya hay un mensaje en proceso')
+      return
+    }
+
+    try {
+      console.log('ChatInput: Enviando mensaje', { mensaje: mensaje.substring(0, 30) + '...', archivos: archivos.length })
+      
+      // Llamar a la función onEnviar (que es async)
+      await onEnviar(mensaje, archivos)
+      
+      // Limpiar el formulario solo si se envió correctamente
       setMensaje('')
       setArchivos([])
       setMostrarUpload(false)
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }
+    } catch (error) {
+      console.error('Error en ChatInput al enviar:', error)
+      // No limpiar el formulario si hay error, para que el usuario pueda reintentar
     }
   }
 

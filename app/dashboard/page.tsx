@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const crearNuevaConversacion = async () => {
     setCreando(true)
     try {
+      console.log('Creando nueva conversación...')
       const response = await fetch('/api/chat/thread', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,14 +31,32 @@ export default function DashboardPage() {
         }),
       })
 
-      if (!response.ok) throw new Error('Error al crear conversación')
+      console.log('Respuesta crear conversación:', { status: response.status, ok: response.ok })
 
-      const { conversacion } = await response.json()
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error al crear conversación' }))
+        console.error('Error al crear conversación:', errorData)
+        const mensajeError = errorData.detalle 
+          ? `${errorData.error}: ${errorData.detalle}`
+          : errorData.error || 'Error al crear conversación'
+        throw new Error(mensajeError)
+      }
+
+      const data = await response.json()
+      console.log('Conversación creada:', data)
+      
+      if (!data.conversacion) {
+        throw new Error('No se recibió la conversación creada')
+      }
+
+      const { conversacion } = data
       setConversacionId(conversacion.id)
       setMensajes([])
-      router.push(`/chat/${conversacion.id}`)
+      router.push(`/dashboard/chat/${conversacion.id}`)
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error completo al crear conversación:', error)
+      const mensajeError = error instanceof Error ? error.message : 'Error al crear conversación'
+      alert(`Error: ${mensajeError}\n\nPor favor, verifica:\n1. Variables de entorno configuradas en Vercel\n2. Credenciales de OpenAI válidas\n3. Conexión a Supabase`)
     } finally {
       setCreando(false)
     }

@@ -4,6 +4,9 @@ import { crearThread } from '@/lib/openai/assistant'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { manejarError, logError } from '@/lib/utils/error-handler'
 import { verificarAccesoUsuario } from '@/lib/utils/auth-helper'
+import { Database } from '@/types/database'
+
+type ConversacionInsert = Database['public']['Tables']['conversaciones']['Insert']
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -45,6 +48,16 @@ export async function POST(request: NextRequest) {
       ? tipoChat
       : 'control_fatalidad_tx'
 
+    // Verificar variables de entorno de OpenAI
+    if (!process.env.OPENAI_API_KEY) {
+      const error = manejarError(new Error('OPENAI_API_KEY no está configurada'))
+      logError(error, 'Verificar variables de entorno')
+      return NextResponse.json(
+        { error: 'Error de configuración: OPENAI_API_KEY no está configurada' },
+        { status: 500 }
+      )
+    }
+
     // Crear thread en OpenAI
     let threadId: string
     try {
@@ -52,31 +65,74 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       const errorDetallado = manejarError(error)
       logError(errorDetallado, 'Crear thread en OpenAI')
+      const mensajeError = errorDetallado.mensaje || 'Error desconocido al crear thread'
+      console.error('Error detallado al crear thread:', errorDetallado)
       return NextResponse.json(
-        { error: 'Error al crear thread de conversación' },
+        { 
+          error: 'Error al crear thread de conversación',
+          detalle: mensajeError 
+        },
+        { status: 500 }
+      )
+    }
+
+    // Verificar variables de entorno de Supabase
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const error = manejarError(new Error('NEXT_PUBLIC_SUPABASE_URL no está configurada'))
+      logError(error, 'Verificar variables de entorno Supabase')
+      return NextResponse.json(
+        { error: 'Error de configuración: NEXT_PUBLIC_SUPABASE_URL no está configurada' },
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const error = manejarError(new Error('SUPABASE_SERVICE_ROLE_KEY no está configurada'))
+      logError(error, 'Verificar variables de entorno Supabase')
+      return NextResponse.json(
+        { error: 'Error de configuración: SUPABASE_SERVICE_ROLE_KEY no está configurada' },
         { status: 500 }
       )
     }
 
     // Crear conversación en Supabase
-    const adminSupabase = createAdminClient()
+    let adminSupabase
+    try {
+      adminSupabase = createAdminClient()
+    } catch (error) {
+      const errorDetallado = manejarError(error)
+      logError(errorDetallado, 'Crear cliente admin de Supabase')
+      return NextResponse.json(
+        { 
+          error: 'Error de configuración de Supabase',
+          detalle: errorDetallado.mensaje 
+        },
+        { status: 500 }
+      )
+    }
+    const datosConversacion: ConversacionInsert = {
+      usuario_id: session.user.id,
+      titulo: tituloFinal,
+      tipo_chat: tipoChatFinal,
+      thread_id: threadId,
+    }
+
     const { data: conversacion, error } = await adminSupabase
       .from('conversaciones')
-      // @ts-expect-error - Supabase type inference issue
-      .insert({
-        usuario_id: session.user.id,
-        titulo: tituloFinal,
-        tipo_chat: tipoChatFinal,
-        thread_id: threadId,
-      })
+      .insert(datosConversacion)
       .select()
       .single()
 
     if (error) {
       const errorDetallado = manejarError(error)
       logError(errorDetallado, 'Crear conversación en Supabase')
+      console.error('Error detallado al crear conversación:', errorDetallado)
+      console.error('Error de Supabase:', error)
       return NextResponse.json(
-        { error: 'Error al crear conversación' },
+        { 
+          error: 'Error al crear conversación en la base de datos',
+          detalle: errorDetallado.mensaje || error.message || 'Error desconocido'
+        },
         { status: 500 }
       )
     }
@@ -85,8 +141,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorDetallado = manejarError(error)
     logError(errorDetallado, 'API chat thread POST')
+    console.error('Error inesperado en API chat thread:', errorDetallado)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { 
+        error: 'Error interno del servidor',
+        detalle: errorDetallado.mensaje || 'Error desconocido'
+      },
       { status: 500 }
     )
   }
