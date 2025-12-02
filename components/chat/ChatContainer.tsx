@@ -59,7 +59,7 @@ export function ChatContainer({
           </div>
         )}
 
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="max-w-4xl mx-auto space-y-6">
           {mensajes.map((mensaje) => (
             <MessageBubble key={mensaje.id} mensaje={mensaje} />
           ))}
