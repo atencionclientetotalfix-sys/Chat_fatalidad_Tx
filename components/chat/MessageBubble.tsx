@@ -78,7 +78,7 @@ export function MessageBubble({ mensaje }: MessageBubbleProps) {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  table: ({ children }: { children: React.ReactNode }) => (
+                  table: ({ children }: { children?: React.ReactNode }) => (
                     <div className="overflow-x-auto my-4 -mx-2">
                       <div className="inline-block min-w-full align-middle">
                         <div className="overflow-hidden border border-border dark:border-border rounded-lg">
@@ -89,22 +89,22 @@ export function MessageBubble({ mensaje }: MessageBubbleProps) {
                       </div>
                     </div>
                   ),
-                  thead: ({ children }: { children: React.ReactNode }) => (
+                  thead: ({ children }: { children?: React.ReactNode }) => (
                     <thead className="bg-background-tertiary dark:bg-background-tertiary">
                       {children}
                     </thead>
                   ),
-                  th: ({ children }: { children: React.ReactNode }) => (
+                  th: ({ children }: { children?: React.ReactNode }) => (
                     <th className="px-4 py-3 text-left text-xs font-semibold text-foreground dark:text-foreground uppercase tracking-wider border-b border-border dark:border-border">
                       {children}
                     </th>
                   ),
-                  td: ({ children }: { children: React.ReactNode }) => (
+                  td: ({ children }: { children?: React.ReactNode }) => (
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground dark:text-foreground border-b border-border/50 dark:border-border/50">
                       {children}
                     </td>
                   ),
-                  tr: ({ children }: { children: React.ReactNode }) => (
+                  tr: ({ children }: { children?: React.ReactNode }) => (
                     <tr className="hover:bg-background-tertiary/30 dark:hover:bg-background-tertiary/30 transition-colors">
                       {children}
                     </tr>
