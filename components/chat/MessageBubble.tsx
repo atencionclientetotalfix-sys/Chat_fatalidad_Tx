@@ -215,7 +215,7 @@ export function MessageBubble({ mensaje }: MessageBubbleProps) {
                   hr: () => (
                     <hr className="my-6 border-t border-border dark:border-border" />
                   ),
-                }}
+                } as any}
               >
                 {mensaje.contenido}
               </ReactMarkdown>
