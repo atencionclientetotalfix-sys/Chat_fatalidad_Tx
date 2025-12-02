@@ -31,10 +31,20 @@ export function Sidebar({
       })
 
       if (response.ok) {
-        window.location.reload()
+        // Si estamos viendo la conversación que se eliminó, redirigir al dashboard
+        if (conversacionActualId === id) {
+          window.location.href = '/dashboard'
+        } else {
+          // Solo refrescar la página para actualizar la lista sin recargar todo
+          window.location.reload()
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Error al eliminar' }))
+        alert(errorData.error || 'Error al eliminar la conversación')
       }
     } catch (error) {
       console.error('Error al eliminar conversación:', error)
+      alert('Error al eliminar la conversación. Por favor intenta nuevamente.')
     }
   }
 

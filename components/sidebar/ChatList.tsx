@@ -55,7 +55,7 @@ export function ChatList({
             `}
             onMouseEnter={() => setHoveredId(conversacion.id)}
             onMouseLeave={() => setHoveredId(null)}
-            onClick={() => router.push(`/chat/${conversacion.id}`)}
+            onClick={() => router.push(`/dashboard/chat/${conversacion.id}`)}
           >
             <MessageSquare
               size={16}
@@ -91,17 +91,25 @@ export function ChatList({
                 })}
               </span>
             </div>
-            {hoveredId === conversacion.id && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEliminarConversacion(conversacion.id)
-                }}
-                className="opacity-70 hover:opacity-100 transition-opacity"
-              >
-                <Trash2 size={14} className="text-red-500" />
-              </button>
-            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEliminarConversacion(conversacion.id)
+              }}
+              className={`
+                flex-shrink-0 p-1 rounded transition-all
+                ${hoveredId === conversacion.id 
+                  ? 'opacity-100 visible' 
+                  : 'opacity-0 invisible'
+                }
+                hover:bg-red-500/20 dark:hover:bg-red-500/20
+                group-hover:opacity-100 group-hover:visible
+              `}
+              title="Eliminar conversación"
+              aria-label="Eliminar conversación"
+            >
+              <Trash2 size={14} className="text-red-500 dark:text-red-400" />
+            </button>
           </div>
         ))}
       </div>
