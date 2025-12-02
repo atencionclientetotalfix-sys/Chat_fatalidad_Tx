@@ -21,12 +21,11 @@ export function UserProfile({ email, nombre }: UserProfileProps) {
   }
 
   const nombreMostrar = nombre || email.split('@')[0]
-  const dominioEmail = email.split('@')[1] || ''
 
   return (
     <div className="p-4 border-t border-border dark:border-border bg-background-secondary dark:bg-background-secondary">
       <div className="mb-4">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
             <User size={20} className="text-white" />
           </div>
@@ -38,14 +37,6 @@ export function UserProfile({ email, nombre }: UserProfileProps) {
               {email}
             </p>
           </div>
-        </div>
-        <div className="px-3 py-2 bg-background-tertiary dark:bg-background-tertiary rounded-lg">
-          <p className="text-xs text-foreground-secondary dark:text-foreground-secondary mb-1">
-            Usuario identificado
-          </p>
-          <p className="text-xs font-medium text-foreground dark:text-foreground">
-            {dominioEmail}
-          </p>
         </div>
       </div>
       <Button

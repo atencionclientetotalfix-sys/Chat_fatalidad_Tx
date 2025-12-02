@@ -42,8 +42,8 @@ export function ChatList({
             key={conversacion.id}
             className={`
               group relative
-              flex items-center gap-2
-              px-3 py-2
+              flex items-start gap-2
+              px-3 py-2.5
               rounded-lg
               cursor-pointer
               transition-colors
@@ -60,7 +60,7 @@ export function ChatList({
             <MessageSquare
               size={16}
               className={`
-                flex-shrink-0
+                flex-shrink-0 mt-0.5
                 ${
                   conversacionActualId === conversacion.id
                     ? 'text-primary dark:text-primary'
@@ -68,18 +68,29 @@ export function ChatList({
                 }
               `}
             />
-            <span
-              className={`
-                flex-1 text-sm truncate
-                ${
-                  conversacionActualId === conversacion.id
-                    ? 'text-foreground dark:text-foreground font-medium'
-                    : 'text-foreground-secondary dark:text-foreground-secondary'
-                }
-              `}
-            >
-              {conversacion.titulo}
-            </span>
+            <div className="flex-1 min-w-0 flex flex-col">
+              <span
+                className={`
+                  text-sm truncate
+                  ${
+                    conversacionActualId === conversacion.id
+                      ? 'text-foreground dark:text-foreground font-medium'
+                      : 'text-foreground-secondary dark:text-foreground-secondary'
+                  }
+                `}
+              >
+                {conversacion.titulo}
+              </span>
+              <span className="text-xs text-foreground-muted dark:text-foreground-muted truncate">
+                {new Date(conversacion.creado_en).toLocaleString('es-CL', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
             {hoveredId === conversacion.id && (
               <button
                 onClick={(e) => {
