@@ -3,13 +3,9 @@
 import { User, Bot } from 'lucide-react'
 import { Mensaje } from '@/types'
 import { useEffect, useState } from 'react'
-// @ts-expect-error - Module resolution issue
 import ReactMarkdown from 'react-markdown'
-// @ts-expect-error - Module resolution issue
 import remarkGfm from 'remark-gfm'
-// @ts-expect-error - Module resolution issue
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-// @ts-expect-error - Module resolution issue
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface MessageBubbleProps {
