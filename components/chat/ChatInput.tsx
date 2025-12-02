@@ -130,7 +130,13 @@ export function ChatInput({
               transition-all duration-200
               shadow-sm dark:shadow-md
               hover:shadow-md dark:hover:shadow-lg
+              scrollbar-hide
+              overflow-y-auto
             "
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none'
+            }}
             rows={1}
             disabled={cargando}
           />

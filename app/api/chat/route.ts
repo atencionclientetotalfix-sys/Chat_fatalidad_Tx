@@ -147,6 +147,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al guardar mensaje' }, { status: 500 })
     }
 
+    // Actualizar título de conversación si es el primer mensaje o tiene título genérico
+    if (contenidoMensaje && (conversacionTipada.titulo === 'Control de Fatalidad TX' || conversacionTipada.titulo === 'Nueva Conversación')) {
+      // Obtener todos los mensajes para verificar si es el primero
+      const { data: mensajesExistentes } = await adminSupabase
+        .from('mensajes')
+        .select('id')
+        .eq('conversacion_id', conversacionId)
+        .order('creado_en', { ascending: true })
+
+      // Si solo hay un mensaje (el que acabamos de crear), actualizar el título
+      if (mensajesExistentes && mensajesExistentes.length === 1) {
+        // Extraer palabras clave del mensaje (primeras 50 caracteres o hasta el primer punto)
+        const palabrasClave = contenidoMensaje
+          .substring(0, 50)
+          .split(/[.!?]/)[0]
+          .trim()
+          .replace(/\n/g, ' ')
+          .replace(/\s+/g, ' ')
+        
+        const nuevoTitulo = palabrasClave.length > 0 
+          ? palabrasClave.length > 40 
+            ? palabrasClave.substring(0, 40) + '...'
+            : palabrasClave
+          : 'Nueva Conversación'
+
+        // Actualizar título de la conversación
+        await adminSupabase
+          .from('conversaciones')
+          // @ts-expect-error - Supabase type inference issue
+          .update({ titulo: nuevoTitulo })
+          .eq('id', conversacionId)
+      }
+    }
+
     // Enviar mensaje a OpenAI
     const fileIds = archivos?.map((a: any) => a.id).filter(Boolean) || []
     const contenidoParaOpenAI = contenidoMensaje || (tieneArchivos ? 'Analiza los archivos adjuntos' : '')
