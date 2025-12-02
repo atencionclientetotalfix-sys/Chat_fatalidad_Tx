@@ -119,7 +119,8 @@ export async function POST(request: NextRequest) {
 
     const { data: conversacion, error } = await adminSupabase
       .from('conversaciones')
-      .insert(datosConversacion)
+      // @ts-ignore - Supabase type inference issue con conversaciones
+      .insert(datosConversacion as any)
       .select()
       .single()
 

@@ -14,6 +14,7 @@ import { Database } from '@/types/database'
 
 type Conversacion = Database['public']['Tables']['conversaciones']['Row']
 type ConversacionUpdate = Database['public']['Tables']['conversaciones']['Update']
+type MensajeInsert = Database['public']['Tables']['mensajes']['Insert']
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -73,8 +74,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.mensaje }, { status: 400 })
     }
 
-    if (!mensaje || typeof mensaje !== 'string' || mensaje.trim().length === 0) {
-      const error = manejarError(new Error('El mensaje no puede estar vacío'))
+    // Permitir mensaje vacío si hay archivos adjuntos
+    const tieneArchivos = archivos && Array.isArray(archivos) && archivos.length > 0
+    const mensajeValido = mensaje && typeof mensaje === 'string' && mensaje.trim().length > 0
+    
+    if (!mensajeValido && !tieneArchivos) {
+      const error = manejarError(new Error('El mensaje no puede estar vacío a menos que haya archivos adjuntos'))
       return NextResponse.json({ error: error.mensaje }, { status: 400 })
     }
 
@@ -123,15 +128,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Guardar mensaje del usuario
+    const contenidoMensaje = mensaje && typeof mensaje === 'string' ? mensaje.trim() : ''
+    const datosMensaje: MensajeInsert = {
+      conversacion_id: conversacionId,
+      rol: 'user',
+      contenido: contenidoMensaje,
+      archivos_adjuntos: archivos || [],
+    }
     const { data: mensajeUsuario, error: msgError } = await adminSupabase
       .from('mensajes')
-      // @ts-expect-error - Supabase type inference issue
-      .insert({
-        conversacion_id: conversacionId,
-        rol: 'user',
-        contenido: mensaje.trim(),
-        archivos_adjuntos: archivos || [],
-      })
+      .insert(datosMensaje as any)
       .select()
       .single()
 
@@ -143,10 +149,11 @@ export async function POST(request: NextRequest) {
 
     // Enviar mensaje a OpenAI
     const fileIds = archivos?.map((a: any) => a.id).filter(Boolean) || []
+    const contenidoParaOpenAI = contenidoMensaje || (tieneArchivos ? 'Analiza los archivos adjuntos' : '')
     
     let runId: string
     try {
-      const resultado = await enviarMensaje(threadId, mensaje.trim(), fileIds)
+      const resultado = await enviarMensaje(threadId, contenidoParaOpenAI, fileIds)
       runId = resultado.runId
     } catch (error) {
       const errorDetallado = manejarError(error)
@@ -208,16 +215,17 @@ export async function POST(request: NextRequest) {
 
     if (ultimoMensaje && ultimoMensaje.rol === 'assistant') {
       // Guardar respuesta del asistente
+      const datosMensajeAsistente: MensajeInsert = {
+        conversacion_id: conversacionId,
+        rol: 'assistant',
+        contenido: ultimoMensaje.contenido,
+        archivos_adjuntos: [],
+      }
+      // @ts-ignore - Supabase type inference issue con mensajes
       const { data: mensajeAsistente, error: asistenteError } =
         await adminSupabase
           .from('mensajes')
-          // @ts-expect-error - Supabase type inference issue
-          .insert({
-            conversacion_id: conversacionId,
-            rol: 'assistant',
-            contenido: ultimoMensaje.contenido,
-            archivos_adjuntos: [],
-          })
+          .insert(datosMensajeAsistente as any)
           .select()
           .single()
 
@@ -236,7 +244,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         mensajeUsuario,
-        mensajeAsistente,
+        mensajeAsistente: mensajeAsistente || null,
       }, {
         headers: {
           'X-RateLimit-Remaining': (rateLimit.limiteRestante || 0).toString(),
@@ -245,10 +253,17 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json(
-      { error: 'No se recibió respuesta del asistente' },
-      { status: 500 }
-    )
+    // Si no hay mensaje del asistente, devolver solo el mensaje del usuario
+    // Esto puede pasar si el asistente no responde o hay un problema
+    return NextResponse.json({
+      mensajeUsuario,
+      mensajeAsistente: null,
+    }, {
+      headers: {
+        'X-RateLimit-Remaining': (rateLimit.limiteRestante || 0).toString(),
+        'X-RateLimit-Reset': new Date(Date.now() + (rateLimit.tiempoRestante || 0)).toISOString(),
+      },
+    })
   } catch (error) {
     const errorDetallado = manejarError(error)
     logError(errorDetallado, 'API chat POST')
